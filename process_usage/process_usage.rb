@@ -38,7 +38,7 @@ class ProcessUsage < Scout::Plugin
       if pid.nil? 
         return error("PID file is blank","The PID file [#{option(:pid_file)}] is blank.")
       end
-      ps_command   = "ps uxww -p #{pid}"
+      ps_command   = "ps uww -p #{pid}"
     else
       ps_command   = option(:ps_command) || "ps auxww"
       ps_regex     = (option(:ps_regex) || "(?i:\\bCOMMAND\\b)").to_s.gsub("COMMAND") { Regexp.escape(option(:command_name)) }
