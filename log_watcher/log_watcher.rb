@@ -53,14 +53,15 @@ class LogWatcher < Scout::Plugin
         # finds new content from +last_bytes+ to the end of the file, then just extracts from the recorded 
         # +read_length+. This ignores new lines that are added after finding the +current_length+. Those lines 
         # will be read on the next run.
-        count = `tail -c +#{last_bytes+1} #{@log_file_path} | head -c #{read_length} | grep "#{@term}" -#{option(:grep_options).to_s.gsub('-','')}c`.strip.to_f
+        if read_length > 0 # head will return an error if zero
+          count = `tail -c +#{last_bytes+1} #{@log_file_path} | head -c #{read_length} | grep "#{@term}" -#{option(:grep_options).to_s.gsub('-','')}c`.strip.to_f
+        end
         # convert to a rate / min
-        count = count / ((Time.now - @last_run)/60)
+        counter(:occurances,count,:per => :minute)
       else
         count = nil
       end
     end
-    report(:occurances => count) if count
     remember(:last_bytes, current_length)
   end
 end
