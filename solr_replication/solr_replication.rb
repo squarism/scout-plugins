@@ -1,5 +1,6 @@
 class SolrReplication < Scout::Plugin
   needs 'open-uri'
+  needs 'rexml/document'
 
   OPTIONS=<<-EOS
   master:
@@ -25,8 +26,16 @@ class SolrReplication < Scout::Plugin
   private
 
   def position_for(host)
-    generation_regex = /Generation: (\d+)/
-    open(host).read.match(generation_regex)[1]
+    open(host) do |c|
+      content = c.read
+      if content =~ /^s*<[^Hh>]*html/
+        generation_regex = /Generation: (\d+)/
+        content.match(generation_regex)[1]
+      else
+        doc = REXML::Document.new(content)
+        REXML::XPath.first(doc, "/response/lst/lst/long[@name='replicatableGeneration']").text
+      end
+    end
   rescue => e
     error "Error connecting to #{host}","Unable to connect to Solr Admin interface at: #{host}. Error:\n#{e.message}\n\nEnsure the plugin options are configured correctly."
   end
