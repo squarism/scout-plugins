@@ -16,11 +16,7 @@ class SolrReplication < Scout::Plugin
     master_position = position_for(master_host)
     slave_position = position_for(slave_host)
     return if errors.any?
-    if master_position and slave_position
-      report 'delay' => master_position.to_i - slave_position.to_i
-    else
-      error "Incorrect master and slave positions found","master:#{master_position.inspect}\nslave:#{slave_position.inspect}"
-    end
+    report 'delay' => master_position.to_i - slave_position.to_i if master_position and slave_position
   end
 
   private
@@ -33,7 +29,8 @@ class SolrReplication < Scout::Plugin
         content.match(generation_regex)[1]
       else
         doc = REXML::Document.new(content)
-        REXML::XPath.first(doc, "/response/lst/lst/long[@name='replicatableGeneration']").text
+        node = REXML::XPath.first(doc, "/response/lst/lst/long[@name='replicatableGeneration']")
+        node && node.text
       end
     end
   rescue => e

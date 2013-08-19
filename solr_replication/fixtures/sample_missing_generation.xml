@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <lst name="responseHeader">
+    <int name="status">0</int>
+    <int name="QTime">1</int>
+  </lst>
+  <lst name="details">
+    <str name="indexSize">65 bytes</str>
+    <str name="indexPath">/opt/solr/4.4.0/coxito/solr/coxitocollection/data/index/</str>
+    <arr name="commits">
+      <lst>
+        <long name="indexVersion">0</long>
+        <long name="generation">1</long>
+        <arr name="filelist">
+          <str>segments_1</str>
+        </arr>
+      </lst>
+    </arr>
+    <str name="isMaster">true</str>
+    <str name="isSlave">false</str>
+    <long name="indexVersion">0</long>
+    <long name="generation">1</long>
+    <lst name="master">
+      <arr name="replicateAfter">
+        <str>commit</str>
+      </arr>
+      <str name="replicationEnabled">true</str>
+      <long name="replicatableIndexVersion">1305174339477</long>
+    </lst>
+  </lst>
+  <str name="WARNING">This response format is experimental.  It is likely to change in the future.</str>
+</response>
