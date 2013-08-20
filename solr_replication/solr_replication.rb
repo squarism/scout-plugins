@@ -29,7 +29,7 @@ class SolrReplication < Scout::Plugin
         content.match(generation_regex)[1]
       else
         doc = REXML::Document.new(content)
-        node = REXML::XPath.first(doc, "/response/lst/lst/long[@name='replicatableGeneration']")
+        node = REXML::XPath.first(doc, "/response/lst[@name='details']/long[@name='indexVersion']")
         node && node.text
       end
     end

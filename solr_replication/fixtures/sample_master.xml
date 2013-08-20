@@ -18,7 +18,7 @@
     </arr>
     <str name="isMaster">true</str>
     <str name="isSlave">false</str>
-    <long name="indexVersion">0</long>
+    <long name="indexVersion">3</long>
     <long name="generation">1</long>
     <lst name="master">
       <arr name="replicateAfter">

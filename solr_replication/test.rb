@@ -47,7 +47,7 @@ class SolrReplicationTest < Test::Unit::TestCase
   def test_errors_if_html_field_does_not_exist
     slave='http://localhost:8765'
     rep_path='/solr/admin/replication/index.html'
-    FakeWeb.register_uri(:get, slave+rep_path, :body => File.read(File.dirname(__FILE__)+'/fixtures/sample_missing_generation.html'))
+    FakeWeb.register_uri(:get, slave+rep_path, :body => File.read(File.dirname(__FILE__)+'/fixtures/sample_missing_data.html'))
     @plugin=SolrReplication.new(nil,{},{:master => 'http://fake', :slave => slave, :replication_path => rep_path})
     res = @plugin.run()
     assert_equal 2, res[:errors].size
@@ -58,7 +58,7 @@ class SolrReplicationTest < Test::Unit::TestCase
     master='http://192.168.0.1:8983'
     slave='http://localhost:8765'
     rep_path='/solr/replication?command=details'
-    FakeWeb.register_uri(:get, master+rep_path, :body => File.read(File.dirname(__FILE__)+'/fixtures/sample_missing_generation.xml'))
+    FakeWeb.register_uri(:get, master+rep_path, :body => File.read(File.dirname(__FILE__)+'/fixtures/sample_missing_data.xml'))
     FakeWeb.register_uri(:get, slave+rep_path, :body => File.read(File.dirname(__FILE__)+'/fixtures/sample_slave.xml'))
     
     @plugin=SolrReplication.new(nil,{},{:master => master, :slave => slave, :replication_path => rep_path})
