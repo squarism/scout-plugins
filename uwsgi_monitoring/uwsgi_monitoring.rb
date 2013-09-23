@@ -29,7 +29,7 @@ class UWSGIMonitoring < Scout::Plugin
         counter(:requests_per_sec, total_requests, :per => :second)
         report(
             :workers => data['workers'].length,
-            :avg_rt => (total_avg_rt / data['workers'].length), 
+            :avg_rt => (total_avg_rt / data['workers'].length) / 1000
             :rss => to_mb(total_rss),
             :vsz => to_mb(total_vsz)
         )
