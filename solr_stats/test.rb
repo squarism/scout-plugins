@@ -17,13 +17,13 @@ class SolrStatisticsTest < Test::Unit::TestCase
     res = @plugin.run()
     stats = res[:reports].first
 
-    assert_equal 500, stats['numDocs']
-    assert_equal 501, stats['maxDocs']
-    assert_equal 0.0032435988363537, stats['avgRequestsPerSecond']
-    assert_equal 0.074812428920417, stats['5minRateReqsPerSecond']
-    assert_equal 0.14410462363288, stats['15minRateReqsPerSecond']
-    assert_equal 81.741, stats['avgTimePerRequest']
-    assert_equal 82.741, stats['medianRequestTime']
-    assert_equal 84.741, stats['95thPcRequestTime']
+    assert_equal 500, stats['num_docs']
+    assert_equal 501, stats['max_docs']
+    assert_equal 0.0032435988363537, stats['avg_rate']
+    assert_equal 0.074812428920417, stats['5_min_rate']
+    assert_equal 0.14410462363288, stats['15_min_rate']
+    assert_equal 81.741, stats['avg_time_per_request']
+    assert_equal 82.741, stats['median_request_time']
+    assert_equal 84.741, stats['95th_pc_request_time']
   end
 end

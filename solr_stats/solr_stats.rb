@@ -29,18 +29,18 @@ class SolrStatistics < Scout::Plugin
         end
         
         result = {
-            'numDocs' => stats['CORE']['searcher']['stats']['numDocs'],
-            'maxDocs' => stats['CORE']['searcher']['stats']['maxDoc'],
+            'num_docs' => stats['CORE']['searcher']['stats']['numDocs'],
+            'max_docs' => stats['CORE']['searcher']['stats']['maxDoc'],
         }
 
         hstats = stats['QUERYHANDLER'][handler]['stats']
         result = result.merge({
-            'avgRequestsPerSecond' => hstats['avgRequestsPerSecond'].to_f,
-            '5minRateReqsPerSecond' => hstats['5minRateReqsPerSecond'].to_f,
-            '15minRateReqsPerSecond' => hstats['15minRateReqsPerSecond'].to_f,
-            'avgTimePerRequest' => hstats['avgTimePerRequest'].to_f,
-            'medianRequestTime' => hstats['medianRequestTime'].to_f,
-            '95thPcRequestTime' => hstats['95thPcRequestTime'].to_f,
+            'avg_rate' => hstats['avgRequestsPerSecond'].to_f,
+            '5_min_rate' => hstats['5minRateReqsPerSecond'].to_f,
+            '15_min_rate' => hstats['15minRateReqsPerSecond'].to_f,
+            'avg_time_per_request' => hstats['avgTimePerRequest'].to_f,
+            'median_request_time' => hstats['medianRequestTime'].to_f,
+            '95th_pc_request_time' => hstats['95thPcRequestTime'].to_f,
         })
 
         report(result)
