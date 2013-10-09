@@ -53,6 +53,7 @@ class RabbitmqOverall < Scout::Plugin
   def query_api(url)
     uri = URI.parse(url)
     http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true if uri.scheme == "https"
     req = Net::HTTP::Get.new(uri.path)
     req.basic_auth(option(:username), option(:password))
     response = http.request(req)
