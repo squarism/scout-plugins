@@ -19,7 +19,7 @@ class RabbitmqOverall < Scout::Plugin
         attributes: password
     monitor_user:
         default: true
-        notes: Is username a monitor user?
+        notes: Is username a monitor user? Setting must be "true" or "false"
   EOS
 
   def build_report
@@ -33,7 +33,7 @@ class RabbitmqOverall < Scout::Plugin
       :exchanges => get('exchanges').length
     }
 
-    if option(:monitor_user)
+    if option(:monitor_user) == "true"
       nodes = get('nodes')
       results[:queue_memory_used] = nodes[0]["mem_used"].to_f / (1024 * 1024)
     end
@@ -41,13 +41,17 @@ class RabbitmqOverall < Scout::Plugin
     report(results)
   rescue Errno::ECONNREFUSED
     error("Unable to connect to RabbitMQ Management server", "Please ensure the connection details are correct in the plugin settings.\n\nException: #{$!.message}\n\nBacktrace:\n#{$!.backtrace}")
+  rescue SecurityError => e
+    error("Server returned an error\nException: #{e.message}\n\nBacktrace:\n#{e.backtrace.join("\n")}")
   end
   
   private
   
   def get(name)
     url = "#{option('management_url').to_s.strip}/api/#{name}/"
-    query_api(url)
+    data = query_api(url)
+    raise SecurityError.new(data["reason"]) if data.kind_of?(Hash) && data.has_key?("error") && !data["error"].nil?
+    data
   end
 
   def query_api(url)

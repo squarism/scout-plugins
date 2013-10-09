@@ -29,7 +29,6 @@ class RabbitmqQueueDetails < Scout::Plugin
     end
 
     queue = get_queue(option(:vhost), option(:queue))
-    raise SecurityError.new(queue["reason"]) if queue.has_key? "error"
 
     report(:messages                => value_or_zero(queue["messages"]),
            :messages_unacknowledged => value_or_zero(queue["messages_unacknowledged"]),
@@ -51,7 +50,9 @@ class RabbitmqQueueDetails < Scout::Plugin
 
   def get_queue(vhost, queue)
     url = "#{option('management_url').to_s.strip}/api/queues/#{CGI::escape(vhost)}/#{queue}/"
-    query_api(url)
+    data = query_api(url)
+    raise SecurityError.new(data["reason"]) if data.kind_of?(Hash) && data.has_key?("error") && !data["error"].nil?
+    data
   end
 
   def query_api(url)
