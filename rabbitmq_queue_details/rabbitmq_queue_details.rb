@@ -25,23 +25,17 @@ class RabbitmqQueueDetails < Scout::Plugin
 
   def build_report
     if option(:queue).nil?
-        return error("Queue Required", "Specificy the queue you wish to monitor in the plugin settings.")
+      return error("Queue Required", "Specificy the queue you wish to monitor in the plugin settings.")
     end
 
     queue = get_queue(option(:vhost), option(:queue))
-
-    if queue["durable"]
-        durable = 1
-    else
-        durable = 0
-    end
 
     report(:messages => queue["messages"],
            :messages_unacknowledged => queue["messages_unacknowledged"],
            :memory => queue["memory"].to_f / (1024 * 1024),
            :pending_acks => queue["backing_queue_status"]["pending_acks"],
            :consumers => queue["consumers"],
-           :durable => durable,
+           :durable => queue["durable"] ? 1 : 0,
            :messages_ready => queue["messages_ready"])
   rescue Errno::ECONNREFUSED
     error("Unable to connect to RabbitMQ Management server", "Please ensure the connection details are correct in the plugin settings.\n\nException: #{$!.message}\n\nBacktrace:\n#{$!.backtrace}")
@@ -49,22 +43,20 @@ class RabbitmqQueueDetails < Scout::Plugin
 
 
   def get_queue(vhost, queue)
-     url = "#{option('management_url').to_s.strip}/api/queues/#{CGI::escape(vhost)}/#{queue}/"
-     result = query_api(url)
+    url = "#{option('management_url').to_s.strip}/api/queues/#{CGI::escape(vhost)}/#{queue}/"
+    query_api(url)
   end
-  
+
   def query_api(url)
-     parsed = URI.parse(url)
-     http = Net::HTTP.new(parsed.host, parsed.port)
-     req = Net::HTTP::Get.new(parsed.path)
-     req.basic_auth option(:username), option(:password)
-     response = http.request(req)
-     data = response.body
-  
-     # we convert the returned JSON data to native Ruby
-     # data structure - a hash
-     result = JSON.parse(data)
-  
-     return result
+    uri = URI.parse(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    req = Net::HTTP::Get.new(uri.path)
+    req.basic_auth(option(:username), option(:password))
+    response = http.request(req)
+    data = response.body
+
+    # we convert the returned JSON data to native Ruby
+    # data structure - a hash
+    JSON.parse(data)
   end
 end

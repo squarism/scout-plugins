@@ -47,21 +47,19 @@ class RabbitmqOverall < Scout::Plugin
   
   def get(name)
     url = "#{option('management_url').to_s.strip}/api/#{name}/"
-    result = query_api(url)
+    query_api(url)
   end
 
   def query_api(url)
-     parsed = URI.parse(url)
-     http = Net::HTTP.new(parsed.host, parsed.port)
-     req = Net::HTTP::Get.new(parsed.path)
-     req.basic_auth option(:username), option(:password)
-     response = http.request(req)
-     data = response.body
-  
-     # we convert the returned JSON data to native Ruby
-     # data structure - a hash
-     result = JSON.parse(data)
-  
-     return result
+    uri = URI.parse(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    req = Net::HTTP::Get.new(uri.path)
+    req.basic_auth(option(:username), option(:password))
+    response = http.request(req)
+    data = response.body
+
+    # we convert the returned JSON data to native Ruby
+    # data structure - a hash
+    JSON.parse(data)
   end
 end
