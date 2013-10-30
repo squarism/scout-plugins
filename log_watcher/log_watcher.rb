@@ -18,7 +18,7 @@ class LogWatcher < Scout::Plugin
   use_sudo:
     attributes: advanced
     default: 0
-    notes: 1=use sudo
+    notes: 1=use sudo. In order to use the sudo option, your scout user will need to have passwordless sudo privileges.
   EOS
   
   def init
@@ -36,7 +36,7 @@ class LogWatcher < Scout::Plugin
     `#{@sudo_cmd}test -e #{@log_file_path}`
     
     unless $?.success?
-      error("Could not find the log file", "The log file could not be found at: #{@log_file_path}. Please ensure the full path is correct.") if option("send_error_if_no_log") == "1"
+      error("Could not find the log file", "The log file could not be found at: #{@log_file_path}. Please ensure the full path is correct and your user has permissions to access the log file.") if option("send_error_if_no_log") == "1"
       return
     end
 
