@@ -62,10 +62,12 @@ class ApacheAnalyzer < Scout::Plugin
 
     remember(:last_request_time, @last_request_time || Time.now)
     report(aggregate)
-    if (option(:perform_daily_analysis).to_i == 1) && log_path && !log_path.empty?
-      generate_log_analysis(log_path, format)
-    else
-      return error("A path to the Apache log file wasn't provided.","Please provide the full path to the Apache log file to analyze (ie - /var/www/apps/APP_NAME/log/access_log)")
+    if option(:perform_daily_analysis).to_i == 1
+      if log_path && !log_path.empty?
+        generate_log_analysis(log_path, format)
+      else
+        return error("A path to the Apache log file wasn't provided.","Please provide the full path to the Apache log file to analyze (ie - /var/www/apps/APP_NAME/log/access_log)")
+      end
     end
   end
   
