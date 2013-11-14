@@ -15,11 +15,15 @@ class JavaHeapMonitor < Scout::Plugin
   end
 
   def heap_size
+     # pid of java process. assumes only 1 java process
      pid = `ps -eaf | grep java | grep -v grep | grep -v java_heap | awk '{print $2}'`
-     #`#{option(:jmap_absolute_path)} -histo:live #{pid} > /tmp/heap.out` 
-     `#{option(:jmap_absolute_path)} -heap #{pid} > /tmp/heap.out` 
+     # histo output of jmap, which loses all the newlines.  not sure why
+     histo = `#{option(:jmap_absolute_path)} -histo:live #{pid} `
+     # parse out last line with total instance count and heap size in bytes
+     count_size = histo.split('Total', 2)[1]
+     # only return the heap size
+     size = count_size.split(' ')[1]
      #`echo hi > /tmp/heap.out`
-     #return o.chomp.to_f / 1024 / 1024 # return mb 
-     o
+     return size.chomp.to_f / 1024 / 1024 # return mb
    end
 end
