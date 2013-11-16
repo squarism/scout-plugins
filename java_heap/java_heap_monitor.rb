@@ -22,7 +22,6 @@ class JavaHeapMonitor < Scout::Plugin
      count_size = histo.split('Total', 2)[1]
      # only return the heap size
      size = count_size.split(' ')[1]
-     #`echo hi > /tmp/heap.out`
      return size.chomp.to_f / 1024 / 1024 # return mb
    end
 
