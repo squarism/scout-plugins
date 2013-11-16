@@ -27,7 +27,7 @@ class JavaHeapMonitor < Scout::Plugin
    end
 
    def jmap
-     option(:jmap_absolute_path) || '/data/dist/jdk1.6.0_37/bin/jmap'
+     option(:jmap_absolute_path) || '/usr/bin/jmap'
    end
 
 end
