@@ -6,10 +6,7 @@ class JavaHeapMonitor < Scout::Plugin
   EOS
 
   def build_report
-    begin
-      
-      ## TODO: work even if the string Total is found twice
-      
+    begin      
       pid = grep_java_process
       if pid.lines.count > 1
         error("too many processes", "more than one process was found grepping for java.") 
@@ -26,11 +23,11 @@ class JavaHeapMonitor < Scout::Plugin
         else
           totals = parse_jmap_total(histo_output)
           if totals.size != 2
-            error("unexpected jmap output from #{jmap} -histo:live #{pid}", "This plugin expects the output of jmap from jdk 1.6.0_37 (and hopefully most others as well)  The \'jmap -histo:live\' includes the total, which should look like \'Total       5081856      493072400\'\nInstead, we parsed as the the total heap used is not an integer: \'#{totals}\' ")         
+            error("unexpected jmap output from #{jmap} -histo:live #{pid}", "This plugin expects the output of jmap from jdk 1.6.0_37 (and hopefully most others as well)  The \'jmap -histo:live\' includes a summary count of instances and heap used.\'\nInstead of two integers, found this: \'#{totals}\' ")         
           else
             heap_size = totals[1].chomp
             if !a_stringified_integer?(heap_size)
-              error("unexpected jmap output from #{jmap} -histo:live #{pid}", "This plugin expects the output of jmap from jdk 1.6.0_37 (and hopefully most others as well)  The \'jmap -histo:live\' includes the total, which should look like \'Total       5081856      493072400\'\nInstead, we parsed as the the total heap used is not an integer: \'#{heap_size}\' ")         
+              error("expected integer. unexpected jmap output from #{jmap} -histo:live #{pid}", "This plugin expects the output of jmap from jdk 1.6.0_37 (and hopefully most others as well)  The \'jmap -histo:live\' includes the total, which should look like \'Total       5081856      493072400\'\nInstead, we parsed as the the total heap used is not an integer: \'#{heap_size}\' ")         
             else
              report(:heap => btye_to_mb(heap_size.to_i)) # return mb
             end
@@ -51,11 +48,16 @@ class JavaHeapMonitor < Scout::Plugin
     # histo output of jmap, which loses all the newlines.  not sure why
     histo = `#{jmap} -histo:live #{pid} `
   end
+  
+  def all_indexes_of(s, pattern)
+  end
 
   def parse_jmap_total(histo)
      # parse out last line with total instance count and heap size in bytes
-     totals_string = histo.split('Total', 2)[1]
-     totals_string.split(' ')
+      pattern = 'Total'
+      # parse out the last line, which should be  Total <count of instances>  <byes of heap used>
+      totals_string = histo.split(pattern)[histo.split(pattern).size - 1]
+      totals_string.split(' ')
   end
 
   def parse_heap_size(totals)
