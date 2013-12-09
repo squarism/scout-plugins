@@ -19,6 +19,11 @@ class MongoDatabaseStats < Scout::Plugin
       default: 27017
       notes: MongoDB standard port is 27017.
       attributes: advanced
+    ssl:
+      name: SSL
+      default: false
+      notes: Specify 'true' if your MongoDB is using SSL for client authentication.
+      attributes: advanced
   EOS
 
   needs 'mongo', 'yaml'
@@ -27,6 +32,7 @@ class MongoDatabaseStats < Scout::Plugin
     @database = option('database')
     @host     = option('host') 
     @port     = option('port')
+    @ssl      = option('ssl')
     if [@database,@host,@port].compact.size < 3
       return error("Connection settings not provided.", "The database name, host, and port must be provided in the advanced settings.")
     end
@@ -34,9 +40,9 @@ class MongoDatabaseStats < Scout::Plugin
     @password = option('password')
     
     begin
-      connection = Mongo::Connection.new(@host,@port,:slave_ok=>true)
+      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true)
     rescue Mongo::ConnectionFailure
-      return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}")
+      return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}, also confirm if SSL should be enabled or disabled.")
     end
     
     # Try to connect to the database
