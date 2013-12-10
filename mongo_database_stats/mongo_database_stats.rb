@@ -32,7 +32,7 @@ class MongoDatabaseStats < Scout::Plugin
     @database = option('database')
     @host     = option('host') 
     @port     = option('port')
-    @ssl      = option('ssl')
+    @ssl      = option("ssl").to_s.strip == 'true'
     if [@database,@host,@port].compact.size < 3
       return error("Connection settings not provided.", "The database name, host, and port must be provided in the advanced settings.")
     end

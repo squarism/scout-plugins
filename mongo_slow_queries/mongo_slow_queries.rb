@@ -50,7 +50,7 @@ class ScoutMongoSlow < Scout::Plugin
   def build_report
     database = option("database").to_s.strip
     server = option("server").to_s.strip
-    ssl    = option("ssl").to_s.strip
+    ssl    = option("ssl").to_s.strip == 'true'
 
     if server.empty?
       server ||= "localhost"

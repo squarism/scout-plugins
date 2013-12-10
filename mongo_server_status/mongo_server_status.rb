@@ -27,7 +27,7 @@ class MongoServerStatus < Scout::Plugin
     # check if options provided
     @host     = option('host') 
     @port     = option('port')
-    @ssl      = option('ssl')
+    @ssl      = option("ssl").to_s.strip == 'true'
     if [@host,@port].compact.size < 2
       return error("Connection settings not provided.", "The host and port must be provided in the advanced settings.")
     end
