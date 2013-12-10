@@ -30,6 +30,11 @@ class ScoutMongoSlow < Scout::Plugin
       default: 27017
       Notes: MongoDB standard port is 27017
       attributes: advanced
+    ssl:
+      name: SSL
+      default: false
+      notes: Specify 'true' if your MongoDB is using SSL for client authentication.
+      attributes: advanced
   EOS
 
   # In order to limit the alert body size, only the first +MAX_QUERIES+ are listed in the alert body. 
@@ -45,6 +50,7 @@ class ScoutMongoSlow < Scout::Plugin
   def build_report
     database = option("database").to_s.strip
     server = option("server").to_s.strip
+    ssl    = option("ssl").to_s.strip
 
     if server.empty?
       server ||= "localhost"
@@ -62,7 +68,7 @@ class ScoutMongoSlow < Scout::Plugin
       threshold = threshold_str.to_i
     end
 
-    db = Mongo::Connection.new(server, option("port").to_i,:slave_ok=>true).db(database)
+    db = Mongo::Connection.new(server, option("port").to_i,:ssl=>option("ssl"),:slave_ok=>true).db(database)
     db.authenticate(option(:username), option(:password)) if !option(:username).to_s.empty?
     enable_profiling(db)
 
