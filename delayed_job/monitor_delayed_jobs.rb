@@ -44,7 +44,7 @@ class MonitorDelayedJobs < Scout::Plugin
     # ALl jobs
     report_hash[:total]     = DelayedJob.count
     # Jobs that are currently being run by workers
-    report_hash[:running]   = DelayedJob.count(:conditions => 'locked_at IS NOT NULL')
+    report_hash[:running]   = DelayedJob.count(:conditions => 'locked_at IS NOT NULL AND failed_at IS NULL')
     # Jobs that are ready to run but haven't ever been run
     report_hash[:waiting]   = DelayedJob.count(:conditions => [ 'run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc ])
     # Jobs that haven't ever been run but are not set to run until later
