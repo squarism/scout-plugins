@@ -68,7 +68,7 @@ class ScoutMongoSlow < Scout::Plugin
       threshold = threshold_str.to_i
     end
 
-    db = Mongo::Connection.new(server, option("port").to_i,:ssl=>option("ssl"),:slave_ok=>true).db(database)
+    db = Mongo::Connection.new(server, option("port").to_i, :ssl => ssl, :slave_ok => true).db(database)
     db.authenticate(option(:username), option(:password)) if !option(:username).to_s.empty?
     enable_profiling(db)
 
