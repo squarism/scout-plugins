@@ -63,7 +63,7 @@ class UrlMonitor < Scout::Plugin
           alert( "The URL [#{url}] is responding again",
                  "URL: #{url}\n\nStatus: #{response.class.to_s[/^Net::HTTP(.*)$/, 1]}. " +
                  "Was unresponsive for #{(Time.now - memory(:down_at)).to_i} seconds")
-        else
+        elsif @last_run
           alert( "The URL [#{url}] is responding",
                  "URL: #{url}\n\nStatus: #{response.class.to_s[/^Net::HTTP(.*)$/, 1]}. ")
         end

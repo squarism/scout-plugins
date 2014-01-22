@@ -10,10 +10,31 @@ class UrlMonitorTest < Test::Unit::TestCase
     FakeWeb.clean_registry
   end
 
-  def test_initial_run
+  def test_initial_run_with_non_reporting_server
+    uri="http://scoutapp.com"
+    FakeWeb.register_uri(:head, uri, :body => "the page", :status => ["404", "Not Found"])
+    @plugin=UrlMonitor.new(nil,{},{:url=>uri})
+    res = @plugin.run()
+    assert res[:reports].any?
+    assert_equal 404, res[:reports].find { |r| r.has_key?(:status) }[:status]
+    assert_equal 0, res[:reports].find { |r| r.has_key?(:up)}[:up]
+    assert res[:alerts].first[:subject] =~ /is not responding/
+  end
+
+  def test_initial_run_with_reporting_server_sends_no_alert
     uri="http://scoutapp.com"
     FakeWeb.register_uri(:head, uri, :body => "the page")
     @plugin=UrlMonitor.new(nil,{},{:url=>uri})
+    res = @plugin.run()
+    assert res[:reports].any?
+    assert_equal 1, res[:reports].find { |r| r.has_key?(:up)}[:up]
+    assert_equal 0, res[:alerts].length
+  end
+
+  def test_run_with_rereporting_server
+    uri="http://scoutapp.com"
+    FakeWeb.register_uri(:head, uri, :body => "the page")
+    @plugin=UrlMonitor.new(:last_run_stub,{},{:url=>uri})
     res = @plugin.run()
     assert res[:reports].any?
     assert_equal 1, res[:reports].find { |r| r.has_key?(:up)}[:up]
