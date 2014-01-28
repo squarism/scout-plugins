@@ -61,6 +61,6 @@ class SslMonitor < Scout::Plugin
 
   def fetch_certificate_end_date(domain, port)
     date = cmd_certificate_end_date(domain, port)
-    date.nil? || !date.include?('notAfter=') ? nil : date.delete('notAfter=')
+    date.nil? || !date.include?('notAfter=') ? nil : date.gsub('notAfter=', '')
   end
 end
