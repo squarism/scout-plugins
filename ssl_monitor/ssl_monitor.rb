@@ -24,11 +24,11 @@ class SslMonitor < Scout::Plugin
     domain:
       name: Domain
       default: www.google.com
-      notes: Domain to monitor (default: www.google.com)
+      notes: Domain to monitor
     port:
       name: Port
       default: 443
-      notes: Port to monitor (default: 443)
+      notes: Port to monitor
   EOS
 
   def build_report
