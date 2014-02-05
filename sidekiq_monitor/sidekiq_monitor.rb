@@ -37,6 +37,8 @@ class SidekiqMonitor < Scout::Plugin
     url += auth if auth && auth != ':'
     url += path
 
+    Sidekiq::Logging.logger = nil unless $VERBOSE
+
     Sidekiq.configure_client do |config|
       config.redis = { :url => url, :namespace => option(:namespace) }
     end
