@@ -1,3 +1,5 @@
+require 'date'
+require 'time'
 class ProcessUsage < Scout::Plugin  
   MEM_CONVERSION = 1024
   
@@ -18,6 +20,14 @@ class ProcessUsage < Scout::Plugin
     notes: Specifies if an error is reported when no commands are found.  Use 0 to disable alert.
     default: 1
     attributes: advanced
+  ignore_window_start:
+    name: Ignore Window Start
+    notes: Time to start ignoring failures.  Useful for monitoring non-persistent processes such as backups.
+    default: 
+  ignore_window_end:
+    name: Ignore Window End
+    notes: Time to resume alerting.
+    default:
   EOS
   
   def build_report
@@ -81,10 +91,30 @@ class ProcessUsage < Scout::Plugin
     else
       report(:num_processes => 0)
       if alert_when_command_not_found
-        error( "Command not found.", "No processes found matching #{option(:command_name)}." )
+        unless in_ignore_window?
+          error( "Command not found.", "No processes found matching #{option(:command_name)}." )
+        end
       end
     end
   rescue Exception => e
     error("Error when executing: #{e.class}", e.message)
   end
+
+  def in_ignore_window?
+    if (s = option(:ignore_window_start)) && (e = option(:ignore_window_end))
+      start_time = Time.parse("#{Date.today} #{s}")
+      end_time = Time.parse("#{Date.today} #{e}")
+
+      if start_time < end_time
+        return Time.now > start_time && Time.now < end_time
+      else
+        return Time.now > start_time || Time.now < end_time
+      end
+    else
+      false
+    end
+  end
+
 end
+
+
