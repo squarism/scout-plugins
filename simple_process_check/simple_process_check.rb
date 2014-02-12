@@ -38,6 +38,13 @@ class SimpleProcessCheck < Scout::Plugin
     #   ["proxymap", "proxymap -t unix -u"],
     #   ["apache2", "usr/sbin/apache2 -k start"] ]
     ps_output=ps_output.downcase.split("\n").map{|line| line.split(/\s+/,2)}
+    
+    # exclude current process ID from results
+    current_pid_output = `ps -eo pid,comm,args`.downcase.split("\n").detect{|line| line =~ /^#{Process.pid}/}
+    if current_pid_output && current_pid_output.first
+      current_pid_output = current_pid_output.first.map{|line| line.split(/\s+/,3)[1..2]}
+      ps_output -= current_pid_output
+    end
 
     processes_to_watch = process_names.split(",").uniq
     process_counts = processes_to_watch.map do |p|
