@@ -24,10 +24,12 @@ class ProcessUsage < Scout::Plugin
     name: Ignore Window Start
     notes: Time to start ignoring failures.  Useful for monitoring non-persistent processes such as backups.
     default: 
+    attributes: advanced
   ignore_window_end:
     name: Ignore Window End
     notes: Time to resume alerting.
     default:
+    attributes: advanced
   EOS
   
   def build_report
