@@ -41,9 +41,9 @@ class SimpleProcessCheck < Scout::Plugin
     
     # exclude current process ID from results
     current_pid_output = `ps -eo pid,comm,args`.downcase.split("\n").detect{|line| line =~ /^#{Process.pid}/}
-    if current_pid_output && current_pid_output.first
-      current_pid_output = current_pid_output.first.map{|line| line.split(/\s+/,3)[1..2]}
-      ps_output -= current_pid_output
+    if current_pid_output
+      current_pid_output = current_pid_output.split(/\s+/,3)[1..2]
+      ps_output.delete_if { |process| process.first == current_pid_output.first && process.last.strip == current_pid_output.last.strip }
     end
 
     processes_to_watch = process_names.split(",").uniq
