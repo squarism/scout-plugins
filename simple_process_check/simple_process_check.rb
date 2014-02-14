@@ -9,6 +9,9 @@
 # You can mix and match pure process_names and process_name/args. Note that the process names are always full string matches,
 # and the args are always partial string matches.
 #
+# As long as you're using the default ps_command, this plugin will EXCLUDE the current scout ruby process from its results.
+# In other words: if you're checking for `ruby` processes, this plugin will return 0, even though Scout IS running as a ruby
+# process (assuming no other Ruby processes besides Scout are running).
 class SimpleProcessCheck < Scout::Plugin
 
   OPTIONS=<<-EOS
