@@ -16,7 +16,7 @@ class SimpleProcessCheck < Scout::Plugin
       notes: "comma-delimited list of process names to monitor. Example: sshd,apache2,node/eventLogger"
     ps_command:
       label: ps command
-      default: ps -eo comm,args
+      default: ps -eo comm,args,pid
       notes: Leave the default in most cases.
       attributes: advanced
   EOS
@@ -33,18 +33,11 @@ class SimpleProcessCheck < Scout::Plugin
       return error("Couldn't use `ps` as expected.", error.message)
     end
 
-    # this makes ps_output an array of two-element arrays:
-    # [ ["smtpd", "smtpd -n smtp -t inet -u -c"],
-    #   ["proxymap", "proxymap -t unix -u"],
-    #   ["apache2", "usr/sbin/apache2 -k start"] ]
-    ps_output=ps_output.downcase.split("\n").map{|line| line.split(/\s+/,2)}
-    
-    # exclude current process ID from results
-    current_pid_output = `ps -eo pid,comm,args`.downcase.split("\n").detect{|line| line =~ /^#{Process.pid}/}
-    if current_pid_output
-      current_pid_output = current_pid_output.split(/\s+/,3)[1..2]
-      ps_output.delete_if { |process| process.first == current_pid_output.first && process.last.strip == current_pid_output.last.strip }
-    end
+    # This makes ps_output an array of two-element arrays (excluding current process):
+    # [ ["smtpd", "smtpd -n smtp -t inet -u -c 14876"],
+    #   ["proxymap", "proxymap -t unix -u 670"],
+    #   ["apache2", "usr/sbin/apache2 -k start 24801"] ]
+    ps_output=ps_output.downcase.split("\n").reject{|line| line =~ /\s+#{Process.pid}\z/ }.map{|line| line.split(/\s+/,2)}
 
     processes_to_watch = process_names.split(",").uniq
     process_counts = processes_to_watch.map do |p|
@@ -78,7 +71,7 @@ class SimpleProcessCheck < Scout::Plugin
 
     report(:processes_present => num_processes_present)
   end
-  
+
   # True if a full match OR a match w/a colon appended to the name. Handles cases like:
   # sshd: ubuntu (so 'sshd' will match)
   def process_name_match?(output,name)
