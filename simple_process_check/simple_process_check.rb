@@ -16,7 +16,7 @@ class SimpleProcessCheck < Scout::Plugin
       notes: "comma-delimited list of process names to monitor. Example: sshd,apache2,node/eventLogger"
     ps_command:
       label: ps command
-      default: ps -eo comm,args
+      default: ps -eo comm,args,pid
       notes: Leave the default in most cases.
       attributes: advanced
   EOS
@@ -33,11 +33,11 @@ class SimpleProcessCheck < Scout::Plugin
       return error("Couldn't use `ps` as expected.", error.message)
     end
 
-    # This makes ps_output an array of two-element arrays (excluding current process ID):
-    # [ ["smtpd", "smtpd -n smtp -t inet -u -c"],
-    #   ["proxymap", "proxymap -t unix -u"],
-    #   ["apache2", "usr/sbin/apache2 -k start"] ]
-    ps_output=ps_output.downcase.split("\n").reject{|line| line =~ /^\s*#{Process.pid}\s+/ }.map{|line| line.split(/\s+/,2)}
+    # This makes ps_output an array of two-element arrays (excluding current process):
+    # [ ["smtpd", "smtpd -n smtp -t inet -u -c 14876"],
+    #   ["proxymap", "proxymap -t unix -u 670"],
+    #   ["apache2", "usr/sbin/apache2 -k start 24801"] ]
+    ps_output=ps_output.downcase.split("\n").reject{|line| line =~ /\s+#{Process.pid}\z/ }.map{|line| line.split(/\s+/,2)}
 
     processes_to_watch = process_names.split(",").uniq
     process_counts = processes_to_watch.map do |p|
