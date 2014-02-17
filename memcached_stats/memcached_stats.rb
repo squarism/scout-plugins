@@ -1,5 +1,5 @@
 class MemcachedStats < Scout::Plugin
-  needs 'memcache', 'yaml'
+  needs 'socket'
 
   OPTIONS = <<-EOS
   host:
@@ -16,18 +16,23 @@ class MemcachedStats < Scout::Plugin
   MEGABYTE = 1048576
 
   def build_report
-    connection = MemCache.new "#{option(:host)}:#{option(:port)}"
-    io_retry = true
+    stats = {}
+
     begin
-      stats = connection.stats["#{option(:host)}:#{option(:port)}"]
-    rescue Errno::ECONNREFUSED, MemCache::MemCacheError => e
-      if io_retry and e.to_s == 'IO timeout'
-        io_retry = false
-        retry
-      else
-        return error( "Could not connect to Memcached.",
-                    "Make certain you've specified the correct host and port: \n\n#{e}\n\n#{e.backtrace}" )
+      connection = TCPSocket.open(option(:host), option(:port))
+      connection.puts('stats')
+      
+      while line = connection.gets.strip
+        break if line == 'END'
+        
+        line = line.split(/\s/)
+        stats[line[1]] = line[2]
       end
+      
+      connection.close
+    rescue Errno::ECONNREFUSED => e
+      return error( "Could not connect to Memcached.",
+                    "Make certain you've specified the correct host and port: \n\n#{e}\n\n#{e.backtrace}" )
     end
 
     report(:uptime_in_hours   => stats['uptime'].to_f / 60 / 60)
