@@ -88,6 +88,7 @@ class UrlMonitor < Scout::Plugin
 
     response = nil
     retry_url_execution_expired = true
+    retry_url_trailing_slash = true
     begin
       connect_host = option('host_override').to_s.strip
       connect_host = uri.host if connect_host.empty?
