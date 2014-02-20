@@ -16,7 +16,7 @@ class SimpleProcessCheck < Scout::Plugin
 
   OPTIONS=<<-EOS
     process_names:
-      notes: "comma-delimited list of process names to monitor. Example: sshd,apache2,node/eventLogger"
+      notes: "comma-delimited list of process names to monitor. Example: sshd,apache2,node/eventLogger. Not case sensitive."
     ps_command:
       label: ps command
       default: ps -eo comm,args,pid
@@ -25,14 +25,14 @@ class SimpleProcessCheck < Scout::Plugin
   EOS
 
   def build_report
-    process_names=option(:process_names)
+    process_names = option(:process_names).downcase
     if process_names.nil? or process_names == ""
       return error("Please specify the names of the processes you want to monitor. Example: sshd,apache2")
     end
 
     ps_output = `#{option(:ps_command)}`
 
-    unless $?.success?
+    unless ps_call_success?
       return error("Couldn't use `ps` as expected.", error.message)
     end
 
@@ -79,5 +79,9 @@ class SimpleProcessCheck < Scout::Plugin
   # sshd: ubuntu (so 'sshd' will match)
   def process_name_match?(output,name)
     output == name or output == "#{name.strip}:"
+  end
+
+  def ps_call_success?
+    $?.success?
   end
 end
