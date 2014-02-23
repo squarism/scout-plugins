@@ -19,9 +19,23 @@ class MongoServerStatus < Scout::Plugin
       default: false
       notes: Specify 'true' if your MongoDB is using SSL for client authentication.
       attributes: advanced
+    connect_timeout:
+      name: Connect Timeout
+      notes: The number of seconds to wait before timing out a connection attempt.
+      default: 30
+      attributes: advanced
+    op_timeout:
+      name: Operation Timeout
+      notes: The number of seconds to wait for a read operation to time out. Disabled by default.
+      attributes: advanced
   EOS
 
   needs 'mongo', 'yaml'
+
+  def option_to_f(op_name)
+    opt = option(op_name)
+    opt.nil? ? opt : opt.to_f
+  end
 
   def build_report 
     # check if options provided
@@ -33,6 +47,8 @@ class MongoServerStatus < Scout::Plugin
     end
     @username = option('username')
     @password = option('password')
+    @connect_timeout = option_to_f('connect_timeout')
+    @op_timeout      = option_to_f('op_timeout')
     
     begin
       connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true)
