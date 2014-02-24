@@ -20,9 +20,23 @@ class MongoReplicaSetMonitoring < Scout::Plugin
       default: false
       notes: Specify 'true' if your MongoDB is using SSL for client authentication.
       attributes: advanced
+    connect_timeout:
+      name: Connect Timeout
+      notes: The number of seconds to wait before timing out a connection attempt.
+      default: 30
+      attributes: advanced
+    op_timeout:
+      name: Operation Timeout
+      notes: The number of seconds to wait for a read operation to time out. Disabled by default.
+      attributes: advanced
   EOS
 
   needs 'mongo'
+
+  def option_to_f(op_name)
+    opt = option(op_name)
+    opt.nil? ? opt : opt.to_f
+  end
 
   def build_report 
 
@@ -35,9 +49,11 @@ class MongoReplicaSetMonitoring < Scout::Plugin
     end
     @username = option('username')
     @password = option('password')
+    @connect_timeout = option_to_f('connect_timeout')
+    @op_timeout      = option_to_f('op_timeout')
 
     begin
-      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true)
+      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true,:connect_timeout=>@connect_timeout,:op_timeout=>@op_timeout)
     rescue Mongo::ConnectionFailure
       return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}, also confirm if SSL should be enabled or disabled.")
     end
