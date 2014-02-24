@@ -51,7 +51,7 @@ class MongoServerStatus < Scout::Plugin
     @op_timeout      = option_to_f('op_timeout')
     
     begin
-      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true)
+      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true,:connect_timeout=>@connect_timeout,:op_timeout=>@op_timeout)
     rescue Mongo::ConnectionFailure
       return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}. Also confirm if SSL should be enabled or disabled.")
     end
