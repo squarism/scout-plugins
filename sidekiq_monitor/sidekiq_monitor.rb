@@ -9,7 +9,7 @@ class SidekiqMonitor < Scout::Plugin
     default: localhost
   port:
     name: Port
-    notes: Redis port to pass to the client library. 
+    notes: Redis port to pass to the client library.
     default: 6379
   db:
     name: Database
@@ -46,7 +46,7 @@ class SidekiqMonitor < Scout::Plugin
     begin
       stats = Sidekiq::Stats.new
 
-      [:enqueued, :failed, :processed].each do |nsym|
+      [:enqueued, :failed, :processed, :scheduled_size, :retry_size].each do |nsym|
         report(nsym => stats.send(nsym))
         counter("#{nsym}_per_minute".to_sym, stats.send(nsym), :per => :minute)
       end
