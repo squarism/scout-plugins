@@ -24,15 +24,31 @@ class MongoDatabaseStats < Scout::Plugin
       default: false
       notes: Specify 'true' if your MongoDB is using SSL for client authentication.
       attributes: advanced
+    connect_timeout:
+      name: Connect Timeout
+      notes: The number of seconds to wait before timing out a connection attempt.
+      default: 30
+      attributes: advanced
+    op_timeout:
+      name: Operation Timeout
+      notes: The number of seconds to wait for a read operation to time out. Disabled by default.
+      attributes: advanced
   EOS
 
   needs 'mongo', 'yaml'
+
+  def option_to_f(op_name)
+    opt = option(op_name)
+    opt.nil? ? opt : opt.to_f
+  end
 
   def build_report 
     @database = option('database')
     @host     = option('host') 
     @port     = option('port')
     @ssl      = option("ssl").to_s.strip == 'true'
+    @connect_timeout = option_to_f('connect_timeout')
+    @op_timeout      = option_to_f('op_timeout')
     if [@database,@host,@port].compact.size < 3
       return error("Connection settings not provided.", "The database name, host, and port must be provided in the advanced settings.")
     end
@@ -40,7 +56,7 @@ class MongoDatabaseStats < Scout::Plugin
     @password = option('password')
     
     begin
-      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true)
+      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true,:connect_timeout=>@connect_timeout,:op_timeout=>@op_timeout)
     rescue Mongo::ConnectionFailure
       return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}, also confirm if SSL should be enabled or disabled.")
     end
