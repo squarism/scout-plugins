@@ -46,9 +46,15 @@ class SidekiqMonitor < Scout::Plugin
     begin
       stats = Sidekiq::Stats.new
 
-      [:enqueued, :failed, :processed, :scheduled_size, :retry_size].each do |nsym|
-        report(nsym => stats.send(nsym))
-        counter("#{nsym}_per_minute".to_sym, stats.send(nsym), :per => :minute)
+      [:enqueued, :failed, :processed, :scheduled_size, :retry_size].each do |name|
+        report(name => stats.send(name))
+        counter("#{name}_per_minute".to_sym, stats.send(name), :per => :minute)
+      end
+
+      Sidekiq.redis do |conn|
+        running = conn.scard('workers').to_i
+        report(:running => running)
+        counter(:running_per_minute, running, :per => :minute)
       end
     end
   rescue Exception => e
