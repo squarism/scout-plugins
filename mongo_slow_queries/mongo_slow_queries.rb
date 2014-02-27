@@ -35,6 +35,15 @@ class ScoutMongoSlow < Scout::Plugin
       default: false
       notes: Specify 'true' if your MongoDB is using SSL for client authentication.
       attributes: advanced
+    connect_timeout:
+      name: Connect Timeout
+      notes: The number of seconds to wait before timing out a connection attempt.
+      default: 30
+      attributes: advanced
+    op_timeout:
+      name: Operation Timeout
+      notes: The number of seconds to wait for a read operation to time out. Disabled by default.
+      attributes: advanced
   EOS
 
   # In order to limit the alert body size, only the first +MAX_QUERIES+ are listed in the alert body. 
@@ -47,10 +56,17 @@ class ScoutMongoSlow < Scout::Plugin
     end
   end
 
+  def option_to_f(op_name)
+    opt = option(op_name)
+    opt.nil? ? opt : opt.to_f
+  end
+
   def build_report
     database = option("database").to_s.strip
     server = option("server").to_s.strip
     ssl    = option("ssl").to_s.strip == 'true'
+    connect_timeout = option_to_f('connect_timeout')
+    op_timeout      = option_to_f('op_timeout')
 
     if server.empty?
       server ||= "localhost"
@@ -68,7 +84,7 @@ class ScoutMongoSlow < Scout::Plugin
       threshold = threshold_str.to_i
     end
 
-    db = Mongo::Connection.new(server, option("port").to_i, :ssl => ssl, :slave_ok => true).db(database)
+    db = Mongo::Connection.new(server, option("port").to_i, :ssl => ssl, :slave_ok => true, :connect_timeout => connect_timeout, :op_timeout => op_timeout).db(database)
     db.authenticate(option(:username), option(:password)) if !option(:username).to_s.empty?
     enable_profiling(db)
 
