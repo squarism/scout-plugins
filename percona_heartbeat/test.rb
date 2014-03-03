@@ -1,10 +1,10 @@
 require File.dirname(__FILE__)+"/../test_helper"
-require File.dirname(__FILE__)+"/percona-heartbeat"
+require File.dirname(__FILE__)+"/percona_heartbeat"
 
 class PerconaHeartbeatTest < Test::Unit::TestCase
 
   def setup
-    @option = parse_defaults('percona-heartbeat')
+    @option = parse_defaults('percona_heartbeat')
     @plugin = PerconaHeartbeat.new({},{}, @option)
   end
 
