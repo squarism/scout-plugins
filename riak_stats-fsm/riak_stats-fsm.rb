@@ -18,7 +18,7 @@
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-class RiakStats < Scout::Plugin
+class RiakStatsFSM < Scout::Plugin
   needs 'net/http'
   needs 'resolv'
   needs 'json'
@@ -36,18 +36,16 @@ class RiakStats < Scout::Plugin
       default: 'stats'
       name: Stats Path
       notes: The path for the stats endpoint.
-    stats:
-      default:
-      name: Stats to Collect
-      notes: A comma separated list of the stats to collect. This has a maximum of 20 entries, additional entries will be ignored.
   EOF
   
   def build_report
-    # quick check to make sure we have at least one stat defined.
-    if option(:stats).nil?
-      return "at least one stat is required for this plugin."
-    end
-
+    fsm_stats  = %w{node_get_fsm_time_100 node_get_fsm_time_95 node_get_fsm_time_99
+                    node_get_fsm_time_mean node_get_fsm_time_median node_put_fsm_time_mean
+                    node_put_fsm_time_median node_put_fsm_time_95 node_put_fsm_time_99
+                    node_put_fsm_time_100 node_get_fsm_objsize_mean node_get_fsm_objsize_median
+                    node_get_fsm_objsize_95 node_get_fsm_objsize_99 node_get_fsm_objsize_100
+                    node_get_fsm_siblings_mean node_get_fsm_siblings_median node_get_fsm_siblings_95
+                    node_get_fsm_siblings_99 node_get_fsm_siblings_100}
     fqdn       = `hostname -f`.strip
     stats_host = get_stats_host(fqdn)
     stats_url  = "http://#{stats_host}:#{option(:stats_port)}/#{option(:stats_path)}"
@@ -55,10 +53,10 @@ class RiakStats < Scout::Plugin
     raw_stats  = JSON.parse(response.body)
     result     = {}
 
-    option(:stats).split(',')[0..19].map(&:strip).each do |stat|
-      result[stat] = raw_stats[stat] if raw_stats[stat]
+    fsm_stats.each do |fsm_stat|
+      result[fsm_stat] = raw_stats[fsm_stat] if raw_stats[fsm_stat]
     end
-
+    
     report result
   end
 

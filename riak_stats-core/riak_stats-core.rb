@@ -18,7 +18,7 @@
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-class RiakStats < Scout::Plugin
+class RiakStatsCore < Scout::Plugin
   needs 'net/http'
   needs 'resolv'
   needs 'json'
@@ -36,18 +36,13 @@ class RiakStats < Scout::Plugin
       default: 'stats'
       name: Stats Path
       notes: The path for the stats endpoint.
-    stats:
-      default:
-      name: Stats to Collect
-      notes: A comma separated list of the stats to collect. This has a maximum of 20 entries, additional entries will be ignored.
   EOF
   
   def build_report
-    # quick check to make sure we have at least one stat defined.
-    if option(:stats).nil?
-      return "at least one stat is required for this plugin."
-    end
-
+    core_stats = %w{node_gets node_gets_total node_puts node_puts_total
+                    vnode_gets vnode_gets_total vnode_puts_total read_repairs
+                    read_repairs_total coord_redirs_total memory_processes_used
+                    sys_process_count pbc_connect pbc_active}
     fqdn       = `hostname -f`.strip
     stats_host = get_stats_host(fqdn)
     stats_url  = "http://#{stats_host}:#{option(:stats_port)}/#{option(:stats_path)}"
@@ -55,10 +50,10 @@ class RiakStats < Scout::Plugin
     raw_stats  = JSON.parse(response.body)
     result     = {}
 
-    option(:stats).split(',')[0..19].map(&:strip).each do |stat|
-      result[stat] = raw_stats[stat] if raw_stats[stat]
+    core_stats.each do |core_stat|
+      result[core_stat] = raw_stats[core_stat] if raw_stats[core_stat]
     end
-
+    
     report result
   end
 
