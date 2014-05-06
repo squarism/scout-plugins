@@ -137,8 +137,4 @@ class RailsRequestsTest < Test::Unit::TestCase
     assert_equal 0, res[:alerts].size
   end
 
-
-
-
-
 end
