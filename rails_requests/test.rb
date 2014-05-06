@@ -99,24 +99,24 @@ class RailsRequestsTest < Test::Unit::TestCase
   end
 
   def test_run_rails_4
-    plugin=RailsRequests.new(nil,{:last_request_time=>Time.parse("2010-04-26 00:00:00")},@options.merge(:log => @rails4_log, :rails_version => '3'))
+    plugin=RailsRequests.new(nil,{:last_request_time=>Time.parse("2010-04-26 00:00:00")},@options.merge(:log => @rails4_log, :rails_version => '4'))
     res=plugin.run
     assert_equal "1.31", res[:reports].first[:average_request_length]
-    assert_equal "0.00", res[:reports].first[:average_db_time]   # NOTE: the Rails3 Parser doesn't extract these values 4/30/2010
-    assert_equal "0.00", res[:reports].first[:average_view_time] # NOTE: the Rails3 Parser doesn't extract these values 4/30/2010
+    assert_equal "0.02", res[:reports].first[:average_db_time]
+    assert_equal "0.21", res[:reports].first[:average_view_time] 
   end
 
   def test_run_with_slow_request_rails_4
-    plugin=RailsRequests.new(nil,{:last_request_time=>Time.parse("2010-04-26 00:00:00")},@options.merge(:log => @rails4_log, :max_request_length=>2, :rails_version => '3'))
+    plugin=RailsRequests.new(nil,{:last_request_time=>Time.parse("2010-04-26 00:00:00")},@options.merge(:log => @rails4_log, :max_request_length=>2, :rails_version => '4'))
     res=plugin.run
     assert_equal 10, res[:reports].first[:slow_requests_percentage]
     assert_equal 1, res[:alerts].size
     assert_equal "Maximum Time(2 sec) exceeded on 1 request",res[:alerts].first[:subject]
-    assert_equal "Completed 200 OK in 6004ms (Views: 2.1ms | ActiveRecord: 2.2ms)", res[:alerts].first[:body]
+    assert_equal "/home\nCompleted in 6.0s (View: 2.1s, DB: 0.2s) | Status: 200\n\n", res[:alerts].first[:body]
   end
 
   def test_ignored_slow_request_rails_4
-    plugin=RailsRequests.new(nil,{:last_request_time=>Time.parse("2010-04-26 00:00:00")},@options.merge(:log => @rails4_log, :max_request_length=>2, :ignored_actions=>'home', :rails_version => '3'))
+    plugin=RailsRequests.new(nil,{:last_request_time=>Time.parse("2010-04-26 00:00:00")},@options.merge(:log => @rails4_log, :max_request_length=>2, :ignored_actions=>'home', :rails_version => '4'))
     res=plugin.run
     assert_equal 0, res[:reports].first[:slow_requests_percentage]
     assert_equal 0, res[:alerts].size
