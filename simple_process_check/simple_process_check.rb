@@ -20,7 +20,7 @@ class SimpleProcessCheck < Scout::Plugin
     ps_command:
       label: ps command
       default: ps -eo comm,args,pid
-      notes: Leave the default in most cases.
+      notes: Leave the default in most cases. If your output is getting truncated, consider specifying a width, e.g. "ps -eo comm,args:120,pid".
       attributes: advanced
   EOS
 
