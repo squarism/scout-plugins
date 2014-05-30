@@ -1,4 +1,4 @@
-# Reports stats on an elasticsearch cluster, including health (green, yellow, red), 
+# Reports stats on an elasticsearch cluster, including health (green, yellow, red),
 # number of nodes, number of shards, etc
 #
 # Created by John Wood of Signal
@@ -13,6 +13,10 @@ class ElasticsearchClusterStatus < Scout::Plugin
       default: 9200
       name: elasticsearch port
       notes: The port elasticsearch is running on
+    alert_on_change:
+      default: true
+      name: alert on any change
+      notes: Generate an internal alert any time the cluster status changes
   EOS
 
   needs 'net/http', 'json', 'open-uri'
@@ -34,8 +38,8 @@ class ElasticsearchClusterStatus < Scout::Plugin
     report(:initializing_shards => response['initializing_shards'])
     report(:unassigned_shards => response['unassigned_shards'])
 
-    # Send an alert every time cluster status changes
-    if memory(:cluster_status) && memory(:cluster_status) != response['status']
+    # Send an alert every time cluster status changes, if enabled
+    if truthy?(option(:alert_on_change)) && memory(:cluster_status) && memory(:cluster_status) != response['status']
       alert("elasticsearch cluster status changed to '#{response['status']}'","elasticsearch cluster health status changed from '#{memory(:cluster_status)}' to '#{response['status']}'")
     end
     remember :cluster_status => response['status']
@@ -47,7 +51,11 @@ class ElasticsearchClusterStatus < Scout::Plugin
   rescue Errno::ECONNREFUSED
     error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
   end
-  
+
+  def truthy?(val)
+    !val.nil? && val.downcase.strip == "true"
+  end
+
   # Generates a status string like "2 (green)" so triggers can be run off the status.
   def status(color)
     code = case color
