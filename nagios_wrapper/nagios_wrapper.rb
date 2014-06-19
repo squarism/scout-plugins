@@ -40,10 +40,10 @@ class NagiosWrapper < Scout::Plugin
       error("The nagios_plugin_command is not defined", "You must configure the full path of the nagios plugin command in nagios_plugin_command")
     end
     if not File.exists?(@nagios_plugin_command)
-      error("The nagios_plugin_command file does not exist", "No such file: \"#{@nagios_plugin_command}\".")
+      error("The nagios_plugin_command file does not exist", "The nagios_plugin_command file does not exist.")
     end
     if not File.executable?(@nagios_plugin_command)
-      error("Can not execute nagios_plugin_command", "The command \"#{@nagios_plugin_command}\" is not executable.")
+      error("Can not execute nagios_plugin_command", "The nagios_plugin_command file is not executable.")
     end
   end
 
