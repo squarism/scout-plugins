@@ -1,6 +1,10 @@
 #
 # This plugin executes and parses return data from a nagios plugin
-# Output is parsed according to http://nagios.sourceforge.net/docs/3_0/pluginapi.html
+# Output is parsed according to http://nagios.sourceforge.net/docs/3_0/pluginapi.html as defined June 19, 2014
+#
+# * The status of the nagios plugin (OK/WARN/ERR/CRIT) is reported as 'status' using the plugins exit code
+# * Only the first line of output from a nagios plugin is captured
+# * Only the first 10 perfdata metrics are reported
 #
 class NagiosWrapper < Scout::Plugin
 
@@ -52,7 +56,7 @@ class NagiosWrapper < Scout::Plugin
     # 4) add the key to perf_data, and the digits from the value
     perf_data = perf_field.split(" ")[0,10].inject({}) {|r,e| k,v=e.split('=')[0,2]; r[k] = v.slice!(/^[\d.]*/).to_f if k && v; r}
 
-    #TODO - Allow ability to define regex captures of the text field numerical values as metrics 
+    #TODO - Allow ability to define regex captures of the text field numerical values as metrics
     text_data = {}
 
     return perf_data.merge(text_data)
