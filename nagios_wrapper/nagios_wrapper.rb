@@ -49,12 +49,15 @@ class NagiosWrapper < Scout::Plugin
 
   def parse_nagios_output(output)
     text_field, perf_field = output.split('|',2)
-    # Split the perf field
-    # 1) on spaces
-    # 2) up to the first 10 metrics
-    # 3) split each "k=v;;;;" formatted metric into a key and value
-    # 4) add the key to perf_data, and the digits from the value
-    perf_data = perf_field.split(" ")[0,10].inject({}) {|r,e| k,v=e.split('=')[0,2]; r[k] = v.slice!(/^[\d.]*/).to_f if k && v; r}
+    perf_data = {}
+    if perf_field != nil && perf_field.strip!.length
+      # Split the perf field
+      # 1) on spaces
+      # 2) up to the first 10 metrics
+      # 3) split each "k=v;;;;" formatted metric into a key and value
+      # 4) add the key to perf_data, and the digits from the value
+      perf_field.split(" ")[0,10].inject(perf_data) {|r,e| k,v=e.split('=')[0,2]; r[k] = v.slice!(/^[\d.]*/).to_f if k && v; r}
+    end
 
     #TODO - Allow ability to define regex captures of the text field numerical values as metrics
     text_data = {}
