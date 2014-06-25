@@ -36,13 +36,13 @@ class NagiosWrapper < Scout::Plugin
   end
 
   def sanity_check
-    if @nagios_plugin_command == nil
+    if @nagios_plugin_command.nil?
       error("The nagios_plugin_command is not defined", "You must configure the full path of the nagios plugin command in nagios_plugin_command")
     end
-    if not File.exists?(@nagios_plugin_command)
+    if !File.exists?(@nagios_plugin_command)
       error("The nagios_plugin_command file does not exist", "The nagios_plugin_command file does not exist.")
     end
-    if not File.executable?(@nagios_plugin_command)
+    if !File.executable?(@nagios_plugin_command)
       error("Can not execute nagios_plugin_command", "The nagios_plugin_command file is not executable.")
     end
   end
@@ -50,7 +50,7 @@ class NagiosWrapper < Scout::Plugin
   def parse_nagios_output(output)
     text_field, perf_field = output.split('|',2)
     perf_data = {}
-    if perf_field != nil && perf_field.strip!.length
+    if !perf_field.nil? && perf_field.strip!.length
       # Split the perf field
       # 1) on spaces
       # 2) up to the first 10 metrics
