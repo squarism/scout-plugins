@@ -23,7 +23,7 @@ class NagiosWrapper < Scout::Plugin
     @nagios_plugin_command = option('nagios_plugin_command')
     @nagios_plugin_args = option('nagios_plugin_args')
 
-    sanity_check
+    return if !sanity_check
 
     # We only support parsing the first line of nagios plugin output
     IO.popen("#{@nagios_plugin_command} #{@nagios_plugin_args}") {|io| @nagios_output = io.readlines[0] }
@@ -38,13 +38,12 @@ class NagiosWrapper < Scout::Plugin
   def sanity_check
     if @nagios_plugin_command.nil?
       error("The nagios_plugin_command is not defined", "You must configure the full path of the nagios plugin command in nagios_plugin_command")
-    end
-    if !File.exists?(@nagios_plugin_command)
+    elsif !File.exists?(@nagios_plugin_command)
       error("The nagios_plugin_command file does not exist", "The nagios_plugin_command file does not exist.")
-    end
-    if !File.executable?(@nagios_plugin_command)
+    elsif !File.executable?(@nagios_plugin_command)
       error("Can not execute nagios_plugin_command", "The nagios_plugin_command file is not executable.")
     end
+    data_for_server[:errors].any? ? false : true
   end
 
   def parse_nagios_output(output)
