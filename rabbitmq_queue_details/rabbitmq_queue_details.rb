@@ -27,6 +27,9 @@ class RabbitmqQueueDetails < Scout::Plugin
     if option(:queue).nil?
       return error("Queue Required", "Specificy the queue you wish to monitor in the plugin settings.")
     end
+    if option(:vhost).nil?
+      return error("Vhost Required", "Specificy the vhost you wish to monitor in the plugin settings.")
+    end
 
     queue = get_queue(option(:vhost), option(:queue))
 
