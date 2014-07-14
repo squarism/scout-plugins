@@ -16,6 +16,7 @@ class HerokuDataclip < Scout::Plugin
       )
     end
     dataclip_ids = dataclip_ids.split(',')
+    return error("Number of dataclip_ids exceeds maximum", "A maximum of 20 dataclip_ids are supported.") if dataclip_ids > 20
     dataclip_result_arrays = []
     dataclip_ids.each do |dataclip_id|
       dataclip_result_arrays << `curl -L https://dataclips.heroku.com/#{dataclip_id}.csv`.split
