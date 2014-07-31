@@ -9,10 +9,6 @@ class HerokuDataclip < Scout::Plugin
   EOS
 
   def build_report
-puts "--------------------------------"
-puts "memory(:last_update_zzz) = #{memory(:last_update_zzz)}"
-puts "memory(:last_update_zzz) = #{memory(:last_update_zzz)}"
-puts "--------------------------------"
     dataclip_ids = option(:dataclip_ids)
     if dataclip_ids.nil? || dataclip_ids.empty? || dataclip_ids !~ /^[a-z,]+$/
       return error(
@@ -46,9 +42,7 @@ puts "--------------------------------"
     # remember the last update timestamp for each dataclip; return error if any are too old
     dataclip_ids.each do |dataclip_id|
       memory_key = :"last_update_#{dataclip_id}"
-      puts memory_key, dataclip_last_update_timestamps[dataclip_id], memory(memory_key)
       last_update = dataclip_last_update_timestamps[dataclip_id] ||= memory(memory_key) || Time.now.to_i
-      puts last_update
       remember(memory_key, last_update)
     end
 
