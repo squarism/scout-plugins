@@ -16,7 +16,7 @@ class HerokuDataclip < Scout::Plugin
         'The "dataclip_ids" option is required to be a comma-delimited list of dataclip IDs ' +
           '(the string of letters from the "dataclips.heroku.com" url) ' +
           'which return ONLY ONE FIELD AND ROW each ' +
-          '(e.g. "SELECT COUNT(*) AS total_count FROM tablename;".'
+          '(e.g. "SELECT COUNT(*) AS total_count FROM tablename;").'
       )
     end
     dataclip_ids = dataclip_ids.split(',')
