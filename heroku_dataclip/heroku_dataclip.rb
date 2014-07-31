@@ -13,7 +13,7 @@ class HerokuDataclip < Scout::Plugin
     if dataclip_ids.nil? || dataclip_ids.empty? || dataclip_ids !~ /^[a-z,]+$/
       return error(
         'Invalid or missing option "dataclip_ids"',
-        'The "dataclip_ids\" option is required to be a comma-delimited list of dataclip IDs ' +
+        'The "dataclip_ids" option is required to be a comma-delimited list of dataclip IDs ' +
           '(the string of letters from the "dataclips.heroku.com" url) ' +
           'which return ONLY ONE FIELD AND ROW each ' +
           '(e.g. "SELECT COUNT(*) AS total_count FROM tablename;".'
@@ -46,7 +46,7 @@ class HerokuDataclip < Scout::Plugin
       remember(memory_key, last_update)
     end
 
-    # return an error if any are older than 10 minutes
+    # return an error if any are older than :max_staleness_in_minutes minutes
     stale_dataclip_update_timestamps = dataclip_last_update_timestamps.reject do |_, timestamp|
       Time.now.to_i - timestamp <= 60 * option(:max_staleness_in_minutes).to_i
     end
