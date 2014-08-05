@@ -5,11 +5,11 @@
 class ElasticsearchClusterStatus < Scout::Plugin
 
   OPTIONS = <<-EOS
-    host:
+    elasticsearch_host:
       default: http://127.0.0.1
       name: Host
       notes: The host elasticsearch is running on
-    port:
+    elasticsearch_port:
       default: 9200
       name: Port
       notes: The port elasticsearch is running on
@@ -30,15 +30,15 @@ class ElasticsearchClusterStatus < Scout::Plugin
   needs 'net/http', 'json', 'open-uri'
 
   def build_report
-    if option(:host).nil? || option(:port).nil?
-      return error("Please provide the host and port", "The elasticsearch host and port to monitor are required.\n\nHost: #{option(:host)}\n\nPort: #{option(:port)}")
+    if option(:elasticsearch_host).nil? || option(:elasticsearch_port).nil?
+      return error("Please provide the host and port", "The elasticsearch host and port to monitor are required.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
     end
 
     if option(:username).nil? != option(:password).nil?
       return error("Please provide both username and password", "Both the elasticsearch username and password to monitor the protected cluster are required.\n\nUsername: #{option(:username)}\n\nPassword: #{option(:password)}")
     end
 
-    base_url = "#{option(:host)}:#{option(:port)}/_cluster/health"
+    base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/_cluster/health"
     req = Net::HTTP::Get.new(base_url)
 
     if !option(:username).nil? && !option(:password).nil?
