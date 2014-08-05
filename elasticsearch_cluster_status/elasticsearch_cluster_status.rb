@@ -7,12 +7,20 @@ class ElasticsearchClusterStatus < Scout::Plugin
   OPTIONS = <<-EOS
     elasticsearch_host:
       default: http://127.0.0.1
-      name: elasticsearch host
+      name: Host
       notes: The host elasticsearch is running on
     elasticsearch_port:
       default: 9200
-      name: elasticsearch port
+      name: Port
       notes: The port elasticsearch is running on
+    username:
+      deault: nil
+      name: Username
+      notes: Username used to log into elasticsearch host if authentication is enabled.
+    password:
+      deault: nil
+      name: Password
+      notes: Password used to log into elasticsearch host if authentication is enabled.
     alert_on_change:
       default: true
       name: alert on any change
@@ -23,11 +31,25 @@ class ElasticsearchClusterStatus < Scout::Plugin
 
   def build_report
     if option(:elasticsearch_host).nil? || option(:elasticsearch_port).nil?
-      return error("Please provide the host and port", "The elasticsearch host and port to monitor are required.\n\nelasticsearch Host: #{option(:elasticsearch_host)}\n\nelasticsearch Port: #{option(:elasticsearch_port)}")
+      return error("Please provide the host and port", "The elasticsearch host and port to monitor are required.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
+    end
+
+    if option(:username).nil? != option(:password).nil?
+      return error("Please provide both username and password", "Both the elasticsearch username and password to monitor the protected cluster are required.\n\nUsername: #{option(:username)}\n\nPassword: #{option(:password)}")
     end
 
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/_cluster/health"
-    response = JSON.parse(Net::HTTP.get(URI.parse(base_url)))
+    req = Net::HTTP::Get.new(base_url)
+
+    if !option(:username).nil? && !option(:password).nil?
+      req.basic_auth option(:username), option(:password)
+    end
+
+    uri = URI.parse(base_url)
+    resp = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
+      http.request(req)
+    }
+    response = JSON.parse(resp.body)
 
     report(:status => status(response['status']))
     report(:number_of_nodes => response['number_of_nodes'])
@@ -70,4 +92,3 @@ class ElasticsearchClusterStatus < Scout::Plugin
   end
 
 end
-
