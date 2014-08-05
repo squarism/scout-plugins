@@ -1,4 +1,4 @@
-# Reports stats on a node in the elasticsearch cluster, including size of indices, 
+# Reports stats on a node in the elasticsearch cluster, including size of indices,
 # number of docs, memory used, threads used, garbage collection times, etc
 #
 # Created by John Wood of Signal
@@ -13,6 +13,14 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
       default: 9200
       name: elasticsearch port
       notes: The port elasticsearch is running on
+    username:
+      deault: nil
+      name: Username
+      notes: Username used to log into elasticsearch host if authentication is enabled.
+    password:
+      deault: nil
+      name: Password
+      notes: Password used to log into elasticsearch host if authentication is enabled.
     node_name:
       name: Node name
       notes: Name of the cluster node you wish to monitor
@@ -25,10 +33,24 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
       return error("Please provide the host, port, and node name", "The elasticsearch host, port, and node to monitor are required.\n\nelasticsearch Host: #{option(:elasticsearch_host)}\n\nelasticsearch Port: #{option(:elasticsearch_port)}\n\nNode Name: #{option(:node_name)}")
     end
 
+    if option(:username).nil? != option(:password).nil?
+      return error("Please provide both username and password", "Both the elasticsearch username and password to monitor the protected cluster are required.\n\nUsername: #{option(:username)}\n\nPassword: #{option(:password)}")
+    end
+
     node_name = CGI.escape(option(:node_name))
 
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/_cluster/nodes/#{node_name}/stats?all=true"
-    resp = JSON.parse(Net::HTTP.get(URI.parse(base_url)))
+    req = Net::HTTP::Get.new(base_url)
+
+    if !option(:username).nil? && !option(:password).nil?
+      req.basic_auth option(:username), option(:password)
+    end
+
+    uri = URI.parse(base_url)
+    response = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
+      http.request(req)
+    }
+    resp = JSON.parse(response.body)
 
     if resp['nodes'].nil? or resp['nodes'].empty?
       return error("No node found with the specified name", "No node in the cluster could be found with the specified name.\n\nNode Name: #{option(:node_name)}")
@@ -55,33 +77,34 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     error("Stats URL not found", "Please ensure the base url for elasticsearch cluster node stats is correct. Current URL: \n\n#{base_url}")
   rescue SocketError
     error("Hostname is invalid", "Please ensure the elasticsearch Host is correct - the host could not be found. Current URL: \n\n#{base_url}")
+  rescue Errno::ECONNREFUSED
+    error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
   end
 
   def b_to_mb(bytes)
     bytes && bytes.to_f / 1024 / 1024
   end
-  
+
   # Reports the time spent in collection / # of collections for this reporting period.
   def gc_time(data)
     key = data.keys.first.to_s
     collection_time = data.values.first['collection_time_in_millis'] || 0
     collection_count = data.values.first['collection_count'] || 1
-    
+
     previous_collection_time = memory(key)
     previous_collection_count = memory(key.sub('time','count'))
-    
+
     if previous_collection_time and previous_collection_count
       rate = (collection_time-previous_collection_time).to_f/(collection_count-previous_collection_count)
       if rate >=0 # assuming that restarting elasticsearch restarts counts, which means the rate could be < 0.
-        report(data.keys.first => rate) 
+        report(data.keys.first => rate)
       elsif rate.nan? # no activity
-        report(data.keys.first => 0) 
+        report(data.keys.first => 0)
       end
     end
-    
+
     remember(key => collection_time || 0)
     remember(key.sub('time','count') => collection_count || 1)
   end
 
 end
-
