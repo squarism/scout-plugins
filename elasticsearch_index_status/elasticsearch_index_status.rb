@@ -49,7 +49,7 @@ class ElasticsearchIndexStatus < Scout::Plugin
     resp = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
       http.request(req)
     }
-    response = JSON.parse(response.body)
+    response = JSON.parse(resp.body)
 
     if response['error'] && response['error'] =~ /IndexMissingException/
       return error("No index found with the specified name", "No index could be found with the specified name.\n\nIndex Name: #{option(:index_name)}")
