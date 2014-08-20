@@ -13,7 +13,8 @@ class LXCMonitor < Scout::Plugin
   # In %
   def cpu
     res = nil
-    cpu_time = File.read('/sys/fs/cgroup/cpuacct/lxc/cpuacct.usage_percpu').to_f
+    # Try to read the cpuacct docker cgroup first, then fall back to lxc
+    cpu_time = File.read('/sys/fs/cgroup/cpuacct/docker/cpuacct.usage_percpu').to_f rescue cpu_time = File.read('/sys/fs/cgroup/cpuacct/lxc/cpuacct.usage_percpu').to_f
     if @last_run and last_cpu_time = memory(:last_cpu_time)
       elapsed_time = Time.now - @last_run
       cpu_since_last_run = (cpu_time - last_cpu_time)/1000000000 # in nanoseconds
