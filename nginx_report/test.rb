@@ -32,4 +32,35 @@ class NginxReportTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_404
+    uri="http://127.0.0.1/nginx_status"
+    time  = Time.now
+    FakeWeb.register_uri(:get, uri, :body => "Not found", :status => ["404","Not Found"])
+    
+    plugin = NginxReport.new(nil,{},{})
+    res = plugin.run
+    assert res[:errors].any?
+  end
+
+
+  def test_connection_refused_and_retry_ok
+    uri="http://127.0.0.1/nginx_status"
+    time  = Time.now
+    FakeWeb.register_uri(:get, uri, [{:exception => Errno::ECONNREFUSED},{:body => File.read(File.dirname(__FILE__)+'/fixtures/nginx_status.txt')}])
+    
+    plugin = NginxReport.new(nil,{},{})
+    res = plugin.run
+    assert res[:errors].empty?
+    assert res[:reports].any?
+  end
+
+  # ensure we don't get stuck in a retry loop
+  def test_connection_refused_on_retry
+    uri="http://127.0.0.1/nginx_status"
+    time  = Time.now
+    FakeWeb.register_uri(:get, uri, :exception => Errno::ECONNREFUSED)
+    plugin = NginxReport.new(nil,{},{})
+    assert_raises(Errno::ECONNREFUSED) { plugin.run }
+  end
 end
