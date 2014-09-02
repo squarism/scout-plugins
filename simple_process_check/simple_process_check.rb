@@ -18,7 +18,7 @@ class SimpleProcessCheck < Scout::Plugin
     process_names:
       notes: "comma-delimited list of process names to monitor. Example: sshd,apache2,node/eventLogger. Not case sensitive."
     alert_total_processes_changes:
-      notes: "Generate an alert if the TOTAL number of processes changes if set to 'true'."
+      notes: "Set to 'true' to generate an alert if the TOTAL number of processes changes."
       default: false
       attributes: advanced
     ps_command:
@@ -61,7 +61,9 @@ class SimpleProcessCheck < Scout::Plugin
     uniq_processes=processes_to_watch.size
     uniq_processes_present = process_counts.select {|count| count > 0}.size
 
-    previous_uniq_processes=memory(:num_processes) # 
+    # stored as memory(:num_processes) for backwards compatibility
+    # unique_processes used to be called num_processes before adding a counter for total_processes on Sep 1 2014.
+    previous_uniq_processes=memory(:num_processes)
     previous_uniq_processes_present=memory(:num_processes_present)
 
 
@@ -95,7 +97,7 @@ class SimpleProcessCheck < Scout::Plugin
 
     remember :total_processes_present => total_processes_present
 
-    report(:unique_processes_present => uniq_processes_present, :total_processes_present => total_processes_present)
+    report(:processes_present => uniq_processes_present, :total_processes_present => total_processes_present)
   end
 
   # True if a full match OR a match w/a colon appended to the name. Handles cases like:
