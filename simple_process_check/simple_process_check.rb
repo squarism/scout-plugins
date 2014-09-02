@@ -81,7 +81,7 @@ class SimpleProcessCheck < Scout::Plugin
     end
 
     # alert if the TOTAL number of instances across the unique process list has changed
-    if option(:alert_total_processes_changes) and total_processes_present != previous_total_processes_present
+    if option(:alert_total_processes_changes) == 'true' and total_processes_present != previous_total_processes_present
       subject = "Process check: #{total_processes_present} total processes are present. Previous total: #{previous_total_processes_present}"
       body = ""
       processes_to_watch.each_with_index do |process,index|
