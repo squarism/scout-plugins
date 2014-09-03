@@ -1,5 +1,4 @@
 class NginxReport < Scout::Plugin
-  
   needs 'open-uri'
 
   # will retry fetching stats on these exceptions
@@ -30,6 +29,15 @@ class NginxReport < Scout::Plugin
     report({:total => total, :reading => reading, :writing => writing, :waiting => waiting, :requests => requests})
 
     counter(:requests_per_sec, requests.to_i, :per => :second)
+  rescue => e
+    # ignore these exceptions. remember the counter value.
+    # nginx restarts are causing issues connecting to the stats page.
+    if RETRY_EXCEPTIONS.include?(e.class)
+      counter(:requests_per_sec, requests.to_i, :per => :second)
+      report(:connection_error => 1)
+    else
+      raise
+    end
   end
 
   # fetches the stats page. on exception, will retry once more, sleeping two seconds before retrying.

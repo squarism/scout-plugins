@@ -53,6 +53,7 @@ class NginxReportTest < Test::Unit::TestCase
     res = plugin.run
     assert res[:errors].empty?
     assert res[:reports].any?
+    assert !res[:reports].first[:connection_error]
   end
 
   # ensure we don't get stuck in a retry loop
@@ -61,6 +62,10 @@ class NginxReportTest < Test::Unit::TestCase
     time  = Time.now
     FakeWeb.register_uri(:get, uri, :exception => Errno::ECONNREFUSED)
     plugin = NginxReport.new(nil,{},{})
-    assert_raises(Errno::ECONNREFUSED) { plugin.run }
+    res = plugin.run
+    assert res[:memory]["_counter_requests_per_sec"]
+    assert res[:errors].empty?
+    assert res[:reports].first[:connection_error]
   end
+
 end
