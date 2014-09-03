@@ -17,6 +17,10 @@ class SimpleProcessCheck < Scout::Plugin
   OPTIONS=<<-EOS
     process_names:
       notes: "comma-delimited list of process names to monitor. Example: sshd,apache2,node/eventLogger. Not case sensitive."
+    alert_total_processes_changes:
+      notes: "Set to 'true' to generate an alert if the TOTAL number of processes changes."
+      default: false
+      attributes: advanced
     ps_command:
       label: ps command
       default: ps -eo comm,args,pid
@@ -53,15 +57,24 @@ class SimpleProcessCheck < Scout::Plugin
       res
     end
 
-    num_processes=processes_to_watch.size
-    num_processes_present = process_counts.select {|count| count > 0}.size
+    # The number of unique process names to watch from process_names
+    uniq_processes=processes_to_watch.size
+    uniq_processes_present = process_counts.select {|count| count > 0}.size
 
-    previous_num_processes=memory(:num_processes)
-    previous_num_processes_present=memory(:num_processes_present)
+    # stored as memory(:num_processes) for backwards compatibility
+    # unique_processes used to be called num_processes before adding a counter for total_processes on Sep 1 2014.
+    previous_uniq_processes=memory(:num_processes)
+    previous_uniq_processes_present=memory(:num_processes_present)
+
+
+    # Get a total number of all unique process instances
+    total_processes_present = process_counts.inject(0) {|total,num_instances| total += num_instances; total }
+    # The total of all unique process instances found in the ps output
+    previous_total_processes_present=memory(:total_processes_present)
 
     # alert if the number of processes monitored or the number of processes present has changed since last time
-    if num_processes !=previous_num_processes || num_processes_present != previous_num_processes_present
-      subject = "Process check: #{num_processes_present} of #{processes_to_watch.size} processes are present"
+    if uniq_processes !=previous_uniq_processes || uniq_processes_present != previous_uniq_processes_present
+      subject = "Process check: #{uniq_processes_present} of #{processes_to_watch.size} processes are present"
       body=""
       processes_to_watch.each_with_index do |process,index|
         body<<"#{index+1}) #{process} - #{process_counts[index]} instance(s) running  \n"
@@ -69,10 +82,22 @@ class SimpleProcessCheck < Scout::Plugin
       alert(subject,body)
     end
 
-    remember :num_processes => num_processes
-    remember :num_processes_present => num_processes_present
+    # alert if the TOTAL number of instances across the unique process list has changed
+    if option(:alert_total_processes_changes) == 'true' and total_processes_present != previous_total_processes_present
+      subject = "Process check: #{total_processes_present} total processes are present. Previous total: #{previous_total_processes_present}"
+      body = ""
+      processes_to_watch.each_with_index do |process,index|
+        body<<"#{index+1}) #{process} - #{process_counts[index]} instance(s) running  \n"
+      end
+      alert(subject,body)
+    end
 
-    report(:processes_present => num_processes_present)
+    remember :num_processes => uniq_processes
+    remember :num_processes_present => uniq_processes_present
+
+    remember :total_processes_present => total_processes_present
+
+    report(:processes_present => uniq_processes_present, :total_processes_present => total_processes_present)
   end
 
   # True if a full match OR a match w/a colon appended to the name. Handles cases like:
