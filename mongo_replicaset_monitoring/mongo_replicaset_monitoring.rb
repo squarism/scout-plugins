@@ -104,7 +104,7 @@ class MongoReplicaSetMonitoring < Scout::Plugin
         member['self']
       end
       
-      if current_member
+      if current_member && member_state != 'Arbiter'
         report(:replication_lag => current_member['optimeDate'] - primary['optimeDate'])
       end
     end  
