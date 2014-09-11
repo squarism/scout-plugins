@@ -25,9 +25,9 @@ class NsqMonitor < Scout::Plugin
     uri = URI("http://#{option(:host)}:#{option(:port)}/stats?format=json")
     stats = JSON.parse(Net::HTTP.get(uri))
     topic = stats['data']['topics'].select { |t| t['topic_name'] == option(:topic) }.first
-    raise 'Topic not found' unless topic
+    return error("Topic not found: #{option(:topic)}") unless topic
     channel = topic['channels'].select { |c| c['channel_name'] == option(:channel) }.first
-    raise 'Channel not found' unless channel
+    return error("Channel not found: #{option(:channel)}") unless channel
     report(depth: channel['depth'], in_flight: channel['in_flight_count'])
   end
 end
