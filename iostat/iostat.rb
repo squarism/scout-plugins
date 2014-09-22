@@ -28,7 +28,7 @@ class Iostat < Scout::Plugin
       ios = (stats['rio'] - old['rio']) + (stats['wio']  - old['wio'])
 
       if ios > 0
-        await = ((stats['ruse'] - old['ruse']) + (stats['wuse'] - old['wuse'])) / ios.to_f
+        await = ((stats['ruse'] - old['ruse']) + (stats['wuse'] - old['wuse'])).abs / ios.to_f
 
         report(:await => await)
       end
