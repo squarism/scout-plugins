@@ -1,13 +1,13 @@
 metadata:
   size_of_indices:
-    label: Total size of the indices
+    label: Indices Size
     units: MB
     precision: "0"
   num_docs:
-    label: Number of indexed documents
+    label: Indexed documents
     precision: "0"
   open_file_descriptors:
-    label: Number of opened file descriptors
+    label: Opened file descriptors
     precision: "0"
   heap_used:
     label: Heap used
