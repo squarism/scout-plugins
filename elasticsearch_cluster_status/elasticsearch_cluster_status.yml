@@ -1,5 +1,6 @@
 metadata:
   status:
+    label: Status
     precision: "0"
   number_of_nodes:
     label: Nodes (total)
