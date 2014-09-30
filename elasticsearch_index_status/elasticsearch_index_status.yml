@@ -1,11 +1,11 @@
 metadata:
   primary_size:
-    label: Size of the primary shards
+    label: Primary shards size
     units: MB
   size:
-    label: Total size of the index
+    label: Index size
     units: MB
   num_docs:
-    label: Number of indexed documents
+    label: Indexed documents
     precision: "0"
 
