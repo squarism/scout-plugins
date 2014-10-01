@@ -39,7 +39,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
 
     node_name = CGI.escape(option(:node_name))
 
-    base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/_cluster/nodes/#{node_name}/stats?all=true"
+    base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}#{uri_path}/#{node_name}/stats?all=true"
     req = Net::HTTP::Get.new(base_url)
 
     if !option(:username).nil? && !option(:password).nil?
@@ -47,7 +47,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     end
 
     uri = URI.parse(base_url)
-    response = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
+    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
       http.request(req)
     }
     resp = JSON.parse(response.body)
@@ -105,6 +105,26 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
 
     remember(key => collection_time || 0)
     remember(key.sub('time','count') => collection_count || 1)
+  end
+
+  # ES >= 1.0 has a different stats endpoint.
+  def uri_path
+    base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/"
+    req = Net::HTTP::Get.new(base_url)
+    if !option(:username).nil? && !option(:password).nil?
+      req.basic_auth option(:username), option(:password)
+    end
+
+    uri = URI.parse(base_url)
+    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
+      http.request(req)
+    }
+    resp = JSON.parse(response.body)
+    if resp['version'] and resp['version']['number'].to_f >= 1
+      '/_nodes'
+    else
+      '/_cluster/nodes'
+    end
   end
 
 end
