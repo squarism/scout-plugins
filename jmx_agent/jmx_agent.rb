@@ -114,9 +114,15 @@ class JmxAgent < Scout::Plugin
     end
 
     mbeans_attributes = option(:mbeans_attributes)
-    return error("No MBeans and Attributes Names defined") if mbeans_attributes.empty?
+    return error("No MBeans and Attributes Names defined") if mbeans_attributes.nil? or mbeans_attributes.empty?
 
-    jmx_cmd = "#{options(:java_command)} -jar #{option(:jmxterm_uberjar)} -l #{mbean_server_location} -n -v silent"
+    java_command = option(:java_command)
+    return error("No Java Command defined") if java_command.nil? or java_command.empty?
+
+    jmxterm_uberjar = option(:jmxterm_uberjar)
+    return error("No jmxterm uberjar file defined") if jmxterm_uberjar.nil? or jmxterm_uberjar.empty?
+
+    jmx_cmd = "#{java_command} -jar #{jmxterm_uberjar} -l #{mbean_server_location} -n -v silent"
 
     # validate JVM connectivity
     read_mbean(jmx_cmd, 'java.lang:type=Runtime', 'Name')
