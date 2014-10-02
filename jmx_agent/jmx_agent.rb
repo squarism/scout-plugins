@@ -39,6 +39,12 @@ class JmxAgent < Scout::Plugin
       default: HeapMemoryUsage,NonHeapMemoryUsage@java.lang:type=Memory
       notes: A pipe-delimited list of comma separated attribute names @ MBean name.
       For example: HeapMemoryUsage,NonHeapMemoryUsage@java.lang:type=Memory|Name@java.lang:type=Runtime
+
+    java_command:
+      name: Java Command
+      default: java
+      notes: The Java command to execute. Can be used to specify the
+             full path to Java or to execute under sudo or other wrappers.
   EOS
   
   def to_float?(value)
@@ -110,7 +116,7 @@ class JmxAgent < Scout::Plugin
     mbeans_attributes = option(:mbeans_attributes)
     return error("No MBeans and Attributes Names defined") if mbeans_attributes.empty?
 
-    jmx_cmd = "java -jar #{option(:jmxterm_uberjar)} -l #{mbean_server_location} -n -v silent"
+    jmx_cmd = "#{options(:java_command)} -jar #{option(:jmxterm_uberjar)} -l #{mbean_server_location} -n -v silent"
 
     # validate JVM connectivity
     read_mbean(jmx_cmd, 'java.lang:type=Runtime', 'Name')
