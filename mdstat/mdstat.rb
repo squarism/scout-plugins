@@ -20,9 +20,11 @@ class MdStat < Scout::Plugin
     mdstat_arrays = stripped_response.split(/\n\n/)
     mdstat_arrays = Array(mdstat_arrays.first) unless(option(:monitor_multiple) == 'true')
 
-    data[:active_disks] = 0
-    data[:spares] = 0
-    data[:failed_disks] = 0
+    data[:total_disks] = 0   # The total number of devices in the array
+    data[:down_disks] = 0    # The number of disks missing (either failed or removed) from the array
+    data[:active_disks] = 0  # The number of disks currently active in the array
+    data[:spares] = 0        # The number of spare disks available to the array
+    data[:failed_disks] = 0  # The number of disks explicitly marked as failed
     
     mdstat_arrays.each do |mdstat|
       mdstat_lines = mdstat.split(/\n/)
@@ -41,14 +43,16 @@ class MdStat < Scout::Plugin
       disk_status = status.squeeze
       
       if disk_counts[0].class == Fixnum && disk_counts[1].class == Fixnum
-        data[:active_disks] += disk_counts[0]
+        data[:total_disks]  += disk_counts[0]
+        data[:down_disks]   += disk_counts[0] - disk_counts[1]
+        data[:active_disks] += disk_counts[1]
         data[:spares]       += spares
         data[:failed_disks] += failed
       else
         raise "Unexpected mdstat file format"
       end 
       
-      if disk_counts[0] != disk_counts[1] || disk_status != 'U' || failed > 0 
+      if disk_counts[0] != disk_counts[1] || disk_status != 'U' || failed > 0
         if memory(:mdstat_ok)
           remember(:mdstat_ok,false)
           alert(:subject => 'Disk failure detected')
