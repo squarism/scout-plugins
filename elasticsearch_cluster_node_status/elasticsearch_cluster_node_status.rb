@@ -40,16 +40,8 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     node_name = CGI.escape(option(:node_name))
 
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}#{uri_path}/#{node_name}/stats?all=true"
-    req = Net::HTTP::Get.new(base_url)
 
-    if !option(:username).nil? && !option(:password).nil?
-      req.basic_auth option(:username), option(:password)
-    end
-
-    uri = URI.parse(base_url)
-    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
-    }
+    response = get_response(base_url)
     resp = JSON.parse(response.body)
 
     if resp['nodes'].nil? or resp['nodes'].empty?
@@ -81,6 +73,18 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
   end
 
+  def get_response(base_url)
+    uri = URI.parse(base_url)
+    req = Net::HTTP::Get.new(uri.path)
+    req['Host'] = uri.host
+    if !option(:username).nil? && !option(:password).nil?
+      req.basic_auth option(:username), option(:password)
+    end
+    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
+      http.request(req)
+    }
+  end
+
   def b_to_mb(bytes)
     bytes && bytes.to_f / 1024 / 1024
   end
@@ -110,15 +114,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   # ES >= 1.0 has a different stats endpoint.
   def uri_path
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/"
-    req = Net::HTTP::Get.new(base_url)
-    if !option(:username).nil? && !option(:password).nil?
-      req.basic_auth option(:username), option(:password)
-    end
-
-    uri = URI.parse(base_url)
-    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
-    }
+    response = get_response(base_url)
     resp = JSON.parse(response.body)
     if resp['version'] and resp['version']['number'].to_f >= 1
       '/_nodes'

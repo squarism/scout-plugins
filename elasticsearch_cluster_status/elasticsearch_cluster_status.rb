@@ -39,16 +39,8 @@ class ElasticsearchClusterStatus < Scout::Plugin
     end
 
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/_cluster/health"
-    req = Net::HTTP::Get.new(base_url)
 
-    if !option(:username).nil? && !option(:password).nil?
-      req.basic_auth option(:username), option(:password)
-    end
-
-    uri = URI.parse(base_url)
-    resp = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
-    }
+    resp = get_response(base_url)
     response = JSON.parse(resp.body)
 
     report(:status => status(response['status']))
@@ -74,8 +66,20 @@ class ElasticsearchClusterStatus < Scout::Plugin
     error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
   end
 
+  def get_response(base_url)
+    uri = URI.parse(base_url)
+    req = Net::HTTP::Get.new(uri.path)
+    req['Host'] = uri.host
+    if !option(:username).nil? && !option(:password).nil?
+      req.basic_auth option(:username), option(:password)
+    end
+    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
+      http.request(req)
+    }
+  end
+
   def truthy?(val)
-    !val.nil? && val.downcase.strip == "true"
+    !val.nil? && val.to_s.downcase.strip == "true"
   end
 
   # Generates a status string like "2 (green)" so triggers can be run off the status.
