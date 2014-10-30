@@ -47,8 +47,9 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     end
 
     uri = URI.parse(base_url)
+    req['Host'] = uri.host
     response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
+      http.request_get(uri.path)
     }
     resp = JSON.parse(response.body)
 
@@ -116,8 +117,9 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     end
 
     uri = URI.parse(base_url)
+    req['Host'] = uri.host
     response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
+      http.request_get(uri.path)
     }
     resp = JSON.parse(response.body)
     if resp['version'] and resp['version']['number'].to_f >= 1

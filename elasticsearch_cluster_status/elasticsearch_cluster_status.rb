@@ -46,8 +46,9 @@ class ElasticsearchClusterStatus < Scout::Plugin
     end
 
     uri = URI.parse(base_url)
+    req['Host'] = uri.host
     resp = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
+      http.request_get(uri.path)
     }
     response = JSON.parse(resp.body)
 
