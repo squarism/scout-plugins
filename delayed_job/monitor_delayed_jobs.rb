@@ -44,18 +44,18 @@ class MonitorDelayedJobs < Scout::Plugin
     # ALl jobs
     report_hash[:total]     = DelayedJob.count
     # Jobs that are currently being run by workers
-    report_hash[:running]   = DelayedJob.count(:conditions => 'locked_at IS NOT NULL AND failed_at IS NULL')
+    report_hash[:running]   = DelayedJob.where('locked_at IS NOT NULL AND failed_at IS NULL').count
     # Jobs that are ready to run but haven't ever been run
-    report_hash[:waiting]   = DelayedJob.count(:conditions => [ 'run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc ])
+    report_hash[:waiting]   = DelayedJob.where('run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc).count
     # Jobs that haven't ever been run but are not set to run until later
-    report_hash[:scheduled] = DelayedJob.count(:conditions => [ 'run_at > ? AND locked_at IS NULL AND attempts = 0', Time.now.utc ])
+    report_hash[:scheduled] = DelayedJob.where('run_at > ? AND locked_at IS NULL AND attempts = 0', Time.now.utc).count
     # Jobs that aren't running that have failed at least once
-    report_hash[:failing]   = DelayedJob.count(:conditions => 'attempts > 0 AND failed_at IS NULL AND locked_at IS NULL')
+    report_hash[:failing]   = DelayedJob.where('attempts > 0 AND failed_at IS NULL AND locked_at IS NULL').count
     # Jobs that have permanently failed
-    report_hash[:failed]    = DelayedJob.count(:conditions => 'failed_at IS NOT NULL')
+    report_hash[:failed]    = DelayedJob.where('failed_at IS NOT NULL').count
     
     # The oldest job that hasn't yet been run, in minutes
-    if oldest = DelayedJob.find(:first, :conditions => [ 'run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc ], :order => :run_at)
+    if oldest = DelayedJob.where('run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc).order(:run_at).first
       report_hash[:oldest] = (Time.now.utc - oldest.run_at) / 60
     else
       report_hash[:oldest] = 0
