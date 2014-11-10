@@ -73,15 +73,18 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
   end
 
+  # All of the elasticsearch methods use this same logic. If this needs an update, an update may be required in others as well.
   def get_response(base_url)
     uri = URI.parse(base_url)
-    req = Net::HTTP::Get.new(uri.path)
-    req['Host'] = uri.host
-    if !option(:username).nil? && !option(:password).nil?
-      req.basic_auth option(:username), option(:password)
-    end
-    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
+
+    http = Net::HTTP.new(uri.host,uri.port)
+    http.use_ssl = (uri.scheme == 'https')
+    http.start { |h|
+      req = Net::HTTP::Get.new(uri.path+"?"+uri.query.to_s)
+      if !option(:username).nil? && !option(:password).nil?
+        req.basic_auth option(:username), option(:password)
+      end
+      response = h.request(req)
     }
   end
 
