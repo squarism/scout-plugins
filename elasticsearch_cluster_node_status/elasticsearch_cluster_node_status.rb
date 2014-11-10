@@ -26,7 +26,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
       notes: Name of the cluster node you wish to monitor
   EOS
 
-  needs 'net/http', 'json', 'cgi', 'open-uri'
+  needs 'net/http', 'net/https', 'json', 'cgi', 'open-uri'
 
   def build_report
     if option(:elasticsearch_host).nil? || option(:elasticsearch_port).nil? || option(:node_name).nil?

@@ -25,7 +25,7 @@ class ElasticsearchIndexStatus < Scout::Plugin
       notes: Name of the index you wish to monitor
   EOS
 
-  needs 'net/http', 'json', 'open-uri'
+  needs 'net/http', 'net/https', 'json', 'open-uri'
 
   def build_report
     if option(:elasticsearch_host).nil? || option(:elasticsearch_port).nil? || option(:index_name).nil?
