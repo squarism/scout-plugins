@@ -7,11 +7,11 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   OPTIONS = <<-EOS
     elasticsearch_host:
       default: http://127.0.0.1
-      name: elasticsearch host
-      notes: The host elasticsearch is running on
+      name: Host URL
+      notes: "The URL to the host elasticsearch is running on. Include the protocal (http:// or https://) in the URL."
     elasticsearch_port:
       default: 9200
-      name: elasticsearch port
+      name: Port
       notes: The port elasticsearch is running on
     username:
       deault: nil
@@ -68,9 +68,9 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   rescue OpenURI::HTTPError
     error("Stats URL not found", "Please ensure the base url for elasticsearch cluster node stats is correct. Current URL: \n\n#{base_url}")
   rescue SocketError
-    error("Hostname is invalid", "Please ensure the elasticsearch Host is correct - the host could not be found. Current URL: \n\n#{base_url}")
+    error("Hostname is invalid", "Please ensure the elasticsearch Host is correct - the host could not be found.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
   rescue Errno::ECONNREFUSED
-    error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
+    error("Unable to connect", "Please ensure the host and port are correct.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
   end
 
   # All of the elasticsearch methods use this same logic. If this needs an update, an update may be required in others as well.
