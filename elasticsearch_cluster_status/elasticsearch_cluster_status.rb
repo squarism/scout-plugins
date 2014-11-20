@@ -7,8 +7,8 @@ class ElasticsearchClusterStatus < Scout::Plugin
   OPTIONS = <<-EOS
     elasticsearch_host:
       default: http://127.0.0.1
-      name: Host
-      notes: The host elasticsearch is running on
+      name: Host URL
+      notes: "The URL to the host elasticsearch is running on. Include the protocal (http:// or https://) in the URL."
     elasticsearch_port:
       default: 9200
       name: Port
