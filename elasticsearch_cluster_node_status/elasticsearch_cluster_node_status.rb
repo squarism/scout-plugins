@@ -42,7 +42,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     resp = JSON.parse(response.body)
 
     if resp['nodes'].nil? or resp['nodes'].empty?
-      return error("No node found with the specified name", "No node in the cluster could be found with the specified name.\n\nNode Name: #{option(:node_name)}")
+      return error("No node found with the specified name", "No node in the cluster could be found with the specified name.\n\nNode Name: #{node_name}")
     end
 
     response = resp['nodes'].values.first
@@ -64,9 +64,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
 
   rescue OpenURI::HTTPError
     error("Stats URL not found", "Please ensure the base url for elasticsearch cluster node stats is correct. Current URL: \n\n#{base_url}")
-  rescue SocketError
-    error("Hostname is invalid", "Please ensure the elasticsearch Host is correct - the host could not be found.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
-  rescue Errno::ECONNREFUSED
+  rescue SocketError, Errno::ECONNREFUSED, URI::InvalidURIError
     error("Unable to connect", "Please ensure the host and port are correct.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
   end
 
@@ -77,7 +75,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     http = Net::HTTP.new(uri.host,uri.port)
     http.use_ssl = (uri.scheme == 'https')
     http.start { |h|
-      req = Net::HTTP::Get.new(uri.path+"?"+uri.query.to_s)
+      req = Net::HTTP::Get.new(uri.path.to_s+"?"+uri.query.to_s)
       if !option(:username).nil? && !option(:password).nil?
         req.basic_auth option(:username), option(:password)
       end
