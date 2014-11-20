@@ -22,8 +22,9 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
       name: Password
       notes: Password used to log into elasticsearch host if authentication is enabled.
     node_name:
+      default: _local
       name: Node name
-      notes: Name of the cluster node you wish to monitor. If blank, defaults to the server's fully qualified domain name.
+      notes: Name of the cluster node you wish to monitor. If blank, defaults to _local.
   EOS
 
   needs 'net/http', 'net/https', 'json', 'cgi', 'open-uri'
@@ -122,7 +123,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   end
 
   def node_name
-    name = option(:node_name).to_s.strip.empty? ? `hostname -f` : option(:node_name)
+    name = option(:node_name).to_s.strip.empty? ? "_local" : option(:node_name)
     CGI.escape(name.strip)
   end
 
