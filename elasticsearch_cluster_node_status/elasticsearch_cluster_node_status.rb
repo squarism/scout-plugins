@@ -23,21 +23,18 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
       notes: Password used to log into elasticsearch host if authentication is enabled.
     node_name:
       name: Node name
-      notes: Name of the cluster node you wish to monitor
+      notes: Name of the cluster node you wish to monitor. If blank, defaults to the server's hostname.
   EOS
 
   needs 'net/http', 'json', 'cgi', 'open-uri'
 
   def build_report
-    if option(:elasticsearch_host).nil? || option(:elasticsearch_port).nil? || option(:node_name).nil?
-      return error("Please provide the host, port, and node name", "The elasticsearch host, port, and node to monitor are required.\n\nelasticsearch Host: #{option(:elasticsearch_host)}\n\nelasticsearch Port: #{option(:elasticsearch_port)}\n\nNode Name: #{option(:node_name)}")
-    end
+    if option(:elasticsearch_host).nil? || option(:elasticsearch_port).nil?
+      return error("Please provide the host and port", "The elasticsearch host and port are required.\n\nelasticsearch Host: #{option(:elasticsearch_host)}\n\nelasticsearch Port: #{option(:elasticsearch_port)}") end
 
     if option(:username).nil? != option(:password).nil?
       return error("Please provide both username and password", "Both the elasticsearch username and password to monitor the protected cluster are required.\n\nUsername: #{option(:username)}\n\nPassword: #{option(:password)}")
     end
-
-    node_name = CGI.escape(option(:node_name))
 
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}#{uri_path}/#{node_name}/stats?all=true"
     req = Net::HTTP::Get.new(base_url)
@@ -125,6 +122,11 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     else
       '/_cluster/nodes'
     end
+  end
+
+  def node_name
+    name = option(:node_name).to_s.strip.empty? ? `hostname -f` : option(:node_name)
+    CGI.escape(name.strip)
   end
 
 end
