@@ -12,17 +12,24 @@ class ElasticsearchClusterNodeStatusTest < Test::Unit::TestCase
   def teardown
     FakeWeb.clean_registry    
   end
+
+  def test_bad_host
+    plugin = ElasticsearchClusterNodeStatus.new(nil,{},@options.merge(:elasticsearch_host=>'bad'))
+    res = plugin.run
+    e = res[:errors].first
+    assert e[:body].include?("bad")
+  end
   
   def test_initial_run
     @plugin = ElasticsearchClusterNodeStatus.new(nil,{},@options.merge(:node_name=>@node_name))
-    @res = @plugin.run()
+    @res = @plugin.run
     assert @res[:errors].empty?, "Error: #{@res[:errors].inspect}"
-    assert_equal 380, @res[:memory]["gc_collection_time"]
-    assert_equal 30, @res[:memory]["gc_collection_count"]
-    assert_equal 221, @res[:memory]["gc_parnew_collection_time"]
-    assert_equal 29, @res[:memory]["gc_parnew_collection_count"]
-    assert_equal 159, @res[:memory]["gc_cms_collection_time"]
-    assert_equal 1, @res[:memory]["gc_cms_collection_count"]
+    assert_not_nil @res[:memory]["gc_collection_time"]
+    assert_not_nil @res[:memory]["gc_collection_count"]
+    assert_not_nil @res[:memory]["gc_parnew_collection_time"]
+    assert_not_nil @res[:memory]["gc_parnew_collection_count"]
+    assert_not_nil @res[:memory]["gc_cms_collection_time"]
+    assert_not_nil @res[:memory]["gc_cms_collection_count"]
   end
   
   def test_second_run

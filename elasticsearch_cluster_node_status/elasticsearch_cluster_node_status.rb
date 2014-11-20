@@ -7,11 +7,11 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   OPTIONS = <<-EOS
     elasticsearch_host:
       default: http://127.0.0.1
-      name: elasticsearch host
-      notes: The host elasticsearch is running on
+      name: Host URL
+      notes: "The URL to the host elasticsearch is running on. Include the protocal (http:// or https://) in the URL."
     elasticsearch_port:
       default: 9200
-      name: elasticsearch port
+      name: Port
       notes: The port elasticsearch is running on
     username:
       deault: nil
@@ -26,7 +26,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
       notes: Name of the cluster node you wish to monitor. If blank, defaults to the server's fully qualified domain name.
   EOS
 
-  needs 'net/http', 'json', 'cgi', 'open-uri'
+  needs 'net/http', 'net/https', 'json', 'cgi', 'open-uri'
 
   def build_report
     if option(:elasticsearch_host).nil? || option(:elasticsearch_port).nil?
@@ -37,16 +37,8 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     end
 
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}#{uri_path}/#{node_name}/stats?all=true"
-    req = Net::HTTP::Get.new(base_url)
 
-    if !option(:username).nil? && !option(:password).nil?
-      req.basic_auth option(:username), option(:password)
-    end
-
-    uri = URI.parse(base_url)
-    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
-    }
+    response = get_response(base_url)
     resp = JSON.parse(response.body)
 
     if resp['nodes'].nil? or resp['nodes'].empty?
@@ -73,9 +65,24 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   rescue OpenURI::HTTPError
     error("Stats URL not found", "Please ensure the base url for elasticsearch cluster node stats is correct. Current URL: \n\n#{base_url}")
   rescue SocketError
-    error("Hostname is invalid", "Please ensure the elasticsearch Host is correct - the host could not be found. Current URL: \n\n#{base_url}")
+    error("Hostname is invalid", "Please ensure the elasticsearch Host is correct - the host could not be found.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
   rescue Errno::ECONNREFUSED
-    error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
+    error("Unable to connect", "Please ensure the host and port are correct.\n\nHost: #{option(:elasticsearch_host)}\n\nPort: #{option(:elasticsearch_port)}")
+  end
+
+  # All of the elasticsearch methods use this same logic. If this needs an update, an update may be required in others as well.
+  def get_response(base_url)
+    uri = URI.parse(base_url)
+
+    http = Net::HTTP.new(uri.host,uri.port)
+    http.use_ssl = (uri.scheme == 'https')
+    http.start { |h|
+      req = Net::HTTP::Get.new(uri.path+"?"+uri.query.to_s)
+      if !option(:username).nil? && !option(:password).nil?
+        req.basic_auth option(:username), option(:password)
+      end
+      response = h.request(req)
+    }
   end
 
   def b_to_mb(bytes)
@@ -107,15 +114,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   # ES >= 1.0 has a different stats endpoint.
   def uri_path
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/"
-    req = Net::HTTP::Get.new(base_url)
-    if !option(:username).nil? && !option(:password).nil?
-      req.basic_auth option(:username), option(:password)
-    end
-
-    uri = URI.parse(base_url)
-    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-      http.request(req)
-    }
+    response = get_response(base_url)
     resp = JSON.parse(response.body)
     if resp['version'] and resp['version']['number'].to_f >= 1
       '/_nodes'
