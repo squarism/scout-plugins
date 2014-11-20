@@ -23,7 +23,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
       notes: Password used to log into elasticsearch host if authentication is enabled.
     node_name:
       name: Node name
-      notes: Name of the cluster node you wish to monitor. If blank, defaults to the server's hostname.
+      notes: Name of the cluster node you wish to monitor. If blank, defaults to the server's fully qualified domain name.
   EOS
 
   needs 'net/http', 'json', 'cgi', 'open-uri'
