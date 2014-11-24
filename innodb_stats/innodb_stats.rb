@@ -54,20 +54,16 @@ class InnodbStats < Scout::Plugin
   end
 
   def mysql_query(query)
-    begin
-       result = `#{@mysql_command} -e "#{query}"`
-       if $?.success?
-         output = {}
-         result.split(/\n/).each do |line|
-            row = line.split(/\t/)
-            output[row.first.downcase.to_sym] = row.last
-         end
-         output
-       else
-         raise MysqlConnectionError, result
-       end
-    rescue Exception => e
-       raise MysqlConnectionError, e
+    result = `#{@mysql_command} -e "#{query}"`
+    if $?.success?
+      output = {}
+      result.split(/\n/).each do |line|
+         row = line.split(/\t/)
+         output[row.first.downcase.to_sym] = row.last
+      end
+      output
+    else
+      raise MysqlConnectionError, result
     end
   end
 

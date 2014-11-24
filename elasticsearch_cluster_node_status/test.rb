@@ -41,9 +41,8 @@ class ElasticsearchClusterNodeStatusTest < Test::Unit::TestCase
   end
 
   def test_node_name_default
-    ElasticsearchClusterNodeStatus.any_instance.stubs(:`).with("hostname -f").returns("example.com")
     @plugin = ElasticsearchClusterNodeStatus.new(nil,{},@options.merge(:node_name => nil))
-    assert_equal 'example.com', @plugin.node_name
+    assert_equal '_local', @plugin.node_name
   end
   
   ###############
