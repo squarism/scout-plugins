@@ -23,3 +23,11 @@ metadata:
   unassigned_shards:
     label: Shards (unassigned)
     precision: "0"
+  query_rate:
+    label: Query Throughput
+    precision: 1
+    units: "/sec"
+  query_time:
+    label: Query Reponse Time
+    precision: "1"
+    units: ms
