@@ -30,6 +30,7 @@ class ElasticsearchClusterNodeStatusTest < Test::Unit::TestCase
     assert_not_nil @res[:memory]["gc_parnew_collection_count"]
     assert_not_nil @res[:memory]["gc_cms_collection_time"]
     assert_not_nil @res[:memory]["gc_cms_collection_count"]
+    puts @plugin.res
   end
   
   def test_second_run
