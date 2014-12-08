@@ -12,6 +12,38 @@ class ElasticsearchIndexStatusTest < Test::Unit::TestCase
     FakeWeb.clean_registry
   end
 
+  def test_initial_run
+    FakeWeb.register_uri(:get, "http://127.0.0.1:9200/test_index/_stats", 
+      [
+       {:body => File.read("./fixtures/index_stats.json")},
+      ]
+    )
+    res = @plugin.run
+    assert res[:errors].empty?, "Error: #{res[:errors].inspect}"
+    assert res[:reports].any?
+  end
+
+  def test_second_run
+        FakeWeb.register_uri(:get, "http://127.0.0.1:9200/test_index/_stats", 
+      [
+       {:body => File.read("./fixtures/index_stats.json")},
+       {:body => File.read("./fixtures/index_stats_second_run.json")},
+      ]
+    )
+    time = Time.now
+    Timecop.travel(time-10*60) do
+      res = @plugin.run
+      Timecop.travel(time) do
+        plugin = ElasticsearchIndexStatus.new(nil, res[:memory], @options)
+        res = plugin.run
+        assert res[:errors].empty?, "Error: #{res[:errors].inspect}"
+        assert res[:reports].any?
+        assert_equal 10.to_f, res[:reports].find { |r| r[:query_time] }[:query_time]
+        assert_in_delta (10.to_f/(10*60)), res[:reports].find { |r| r[:query_rate] }[:query_rate]
+      end
+    end
+  end
+
   def test_processes_indices_in_old_format
     response = {
       '_all' => {
