@@ -47,7 +47,13 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     end
 
     response = resp['nodes'].values.first
-    report(:size_of_indices => b_to_mb(response['indices']['size_in_bytes']) || 0)
+    # newer ES puts memory in ['indices']['store']['size_in_bytes']
+    mem = if response['indices']['store']
+      response['indices']['store']['size_in_bytes']
+    else
+      response['indices']['size_in_bytes']
+    end
+    report(:size_of_indices => b_to_mb(mem) || 0)
     report(:num_docs => (response['indices']['docs']['count'] rescue 0))
     report(:open_file_descriptors => response['process']['open_file_descriptors'] || 0)
     report(:heap_used => b_to_mb(response['jvm']['mem']['heap_used_in_bytes'] || 0))

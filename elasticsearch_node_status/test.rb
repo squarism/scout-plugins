@@ -1,11 +1,11 @@
 require File.expand_path('../../test_helper.rb', __FILE__)
-require File.expand_path('../elasticsearch_cluster_node_status.rb', __FILE__)
+require File.expand_path('../elasticsearch_node_status.rb', __FILE__)
 
 require 'open-uri'
 class ElasticsearchClusterNodeStatusTest < Test::Unit::TestCase
   def setup
     @node_name = 'es_db0'
-    @options=parse_defaults("elasticsearch_cluster_node_status")
+    @options=parse_defaults("elasticsearch_node_status")
     setup_urls
   end
   
@@ -30,7 +30,6 @@ class ElasticsearchClusterNodeStatusTest < Test::Unit::TestCase
     assert_not_nil @res[:memory]["gc_parnew_collection_count"]
     assert_not_nil @res[:memory]["gc_cms_collection_time"]
     assert_not_nil @res[:memory]["gc_cms_collection_count"]
-    puts @plugin.res
   end
   
   def test_second_run
