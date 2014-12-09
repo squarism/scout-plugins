@@ -107,6 +107,14 @@ class MongoReplicaSetMonitoring < Scout::Plugin
       if current_member && member_state != 'Arbiter'
         report(:replication_lag => current_member['optimeDate'] - primary['optimeDate'])
       end
+
+      # to prevent duplicate alerts, we only report nonzero faulty_member_count from our current primary
+      if member_state == 'Primary'
+        faulty_members = replset_status['members'].select { |member| [4, 6, 8].include?(member['state']) }
+        report(:faulty_member_count => faulty_members.size)
+      else
+        report(:faulty_member_count => 0)
+      end
     end  
     report(:member_healthy => current_member['health'] ? 1 : 0)
   end  
