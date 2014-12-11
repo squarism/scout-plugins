@@ -58,23 +58,6 @@ class ElasticsearchQuery < Scout::Plugin
     error("Unable to connect", "Please ensure the host and port are correct. Current URL: \n\n#{base_url}")
   end
 
-  def search_metrics(indices)
-    index_name = option(:index_name)
-    search_stats = indices[index_name]['primaries']['search']
-    # sample
-    # {"open_contexts"=>0, "query_total"=>319796, "query_time_in_millis"=>22074525, "query_current"=>0, "fetch_total"=>12014, "fetch_time_in_millis"=>698430, "fetch_current"=>0} 
-    queries_before = memory("_counter_query_rate")
-    query_total = search_stats['query_total']
-    query_time = search_stats['query_time_in_millis']
-    counter(:query_rate, query_total, :per => :second)
-    last_query_time = memory("last_query_time")
-    if queries_before and !last_query_time.nil?
-      avg_query_time = (query_time - last_query_time)/(query_total-queries_before[:value]).to_f
-      report(:query_time=>avg_query_time) if avg_query_time >= 0 # handle a reset
-    end
-    remember(:last_query_time,query_time)
-  end
-
   # All of the elasticsearch methods use this same logic. If this needs an update, an update may be required in others as well.
   def get_response(base_url)
     uri = URI.parse(base_url)
