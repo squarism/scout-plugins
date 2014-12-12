@@ -1,11 +1,11 @@
 # Runs the given query and reports on if the query succeeded.
-class ElasticsearchQuery < Scout::Plugin
+class LogstashElasticsearchCanary < Scout::Plugin
 
   OPTIONS = <<-EOS
     elasticsearch_host:
       default: http://127.0.0.1
       name: Host URL
-      notes: "The URL to the host elasticsearch is running on. Include the protocal (http// or https://) in the URL."
+      notes: "The URL to the host elasticsearch is running on. Include the protocol (http// or https://) in the URL."
     elasticsearch_port:
       default: 9200
       name: Port
@@ -20,7 +20,8 @@ class ElasticsearchQuery < Scout::Plugin
       notes: Password used to log into elasticsearch host if authentication is enabled.
     index_name:
       name: Index Name
-      notes: "Name of the index you wish to monitor. If the index roles up by date (ex: index_name-2014.12.09), exclude the '-2014.12.09' portion."
+      default: logstash
+      notes: "Name of the index you wish to monitor. By default, this will handle indexes that are partitioned by day."
   EOS
 
   needs 'net/http', 'net/https', 'json', 'open-uri'
@@ -35,7 +36,7 @@ class ElasticsearchQuery < Scout::Plugin
     end
 
     index_name = option(:index_name)
-    index_name += "-#{Time.now.strftime("%Y.%m.%d")}"
+    index_name += "-#{Time.now.strftime("%Y.%m.%d")}" # "logstash-%{+YYYY.MM.dd}"
 
     base_url = "#{option(:elasticsearch_host)}:#{option(:elasticsearch_port)}/#{index_name}/_search?pretty"
 
@@ -47,7 +48,7 @@ class ElasticsearchQuery < Scout::Plugin
     else
       report(:error => 0,:query_time => response["took"], :hits => response["hits"]["total"])
     end
-    report(:status => response["status"])
+    report(:status_code => response["status"])
 
 
   rescue OpenURI::HTTPError
