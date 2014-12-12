@@ -93,8 +93,8 @@ class JmxAgent < Scout::Plugin
           end
         end
       end
-    rescue
-      error("Error running JMX command", "Command: #{command}\n\nResult: #{result}")
+    rescue => e
+      error("Error running JMX command", "Command: #{command}\n\nResult: #{result}\n\nException: #{e.message}\n\nBacktrace: #{e.backtrace}")
     end
     values
   end
