@@ -10,6 +10,8 @@ class MonitorDelayedJobs < Scout::Plugin
   rails_env:
     name: Rails environment that should be used
     default: production
+  queue_name:
+    name: If specified, only gather the metrics for jobs in this specific queue name. When nil, aggregate metrics from all queues. Default: nil
   EOS
   
   needs 'active_record', 'yaml', 'erb'
@@ -38,24 +40,39 @@ class MonitorDelayedJobs < Scout::Plugin
     
     db_config = YAML::load(ERB.new(File.read(db_config_path)).result)
     ActiveRecord::Base.establish_connection(db_config[option(:rails_env)])
-        
-    report_hash = Hash.new
-    
-    # ALl jobs
-    report_hash[:total]     = DelayedJob.count
+
+    # The hash which will store the query commands.
+    query_hash = Hash.new
+    # All jobs
+    query_hash[:total]     = DelayedJob
     # Jobs that are currently being run by workers
-    report_hash[:running]   = DelayedJob.where('locked_at IS NOT NULL AND failed_at IS NULL').count
+    query_hash[:running]   = DelayedJob.where('locked_at IS NOT NULL AND failed_at IS NULL')
     # Jobs that are ready to run but haven't ever been run
-    report_hash[:waiting]   = DelayedJob.where('run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc).count
+    query_hash[:waiting]   = DelayedJob.where('run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc)
     # Jobs that haven't ever been run but are not set to run until later
-    report_hash[:scheduled] = DelayedJob.where('run_at > ? AND locked_at IS NULL AND attempts = 0', Time.now.utc).count
+    query_hash[:scheduled] = DelayedJob.where('run_at > ? AND locked_at IS NULL AND attempts = 0', Time.now.utc)
     # Jobs that aren't running that have failed at least once
-    report_hash[:failing]   = DelayedJob.where('attempts > 0 AND failed_at IS NULL AND locked_at IS NULL').count
+    query_hash[:failing]   = DelayedJob.where('attempts > 0 AND failed_at IS NULL AND locked_at IS NULL')
     # Jobs that have permanently failed
-    report_hash[:failed]    = DelayedJob.where('failed_at IS NOT NULL').count
-    
+    query_hash[:failed]    = DelayedJob.where('failed_at IS NOT NULL')
     # The oldest job that hasn't yet been run, in minutes
-    if oldest = DelayedJob.where('run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc).order(:run_at).first
+    query_hash[:oldest]    = DelayedJob.where('run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc).order(:run_at)
+
+    if option(:queue_name)
+      query_hash.keys.each do |key|
+        query_hash[key] = query_hash[key].where('queue = ?', option(:queue_name))
+      end
+    end
+
+    report_hash = Hash.new
+
+    # Execute .count on these query_hash keys and store in report_hash
+    query_hash.keys.select{|k| [:total, :running, :waiting, :scheduled, :failing, :failed].include?(k)}.each do |key|
+      report_hash[key] = query_hash[key].count
+    end
+
+    # The oldest job that hasn't yet been run, in minutes
+    if oldest = query_hash[:oldest].first
       report_hash[:oldest] = (Time.now.utc - oldest.run_at) / 60
     else
       report_hash[:oldest] = 0
