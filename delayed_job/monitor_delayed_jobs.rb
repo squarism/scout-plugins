@@ -11,7 +11,7 @@ class MonitorDelayedJobs < Scout::Plugin
     name: Rails environment that should be used
     default: production
   queue_name:
-    name: If specified, only gather the metrics for jobs in this specific queue name. When nil, aggregate metrics from all queues. Default: nil
+    name: If specified, only gather the metrics for jobs in this specific queue name. When nil, aggregate metrics from all queues. Default is nil
   EOS
   
   needs 'active_record', 'yaml', 'erb'
