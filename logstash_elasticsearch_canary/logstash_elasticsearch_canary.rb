@@ -47,7 +47,7 @@ class LogstashElasticsearchCanary < Scout::Plugin
       report(:error => 1, :status_code => response["status"])
     else
       # ES doesn't return a status code when no error. we'll return 200 since it look like they use HTTP status codes.
-      report(:error => 0, :status_code => 200, :query_time => response["took"], :hits => response["hits"]["total"])
+      report(:error => 0, :status_code => (response["status"] || 200), :query_time => response["took"], :hits => response["hits"]["total"])
     end
 
   rescue OpenURI::HTTPError
