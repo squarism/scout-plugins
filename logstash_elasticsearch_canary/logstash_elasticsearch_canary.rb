@@ -44,12 +44,11 @@ class LogstashElasticsearchCanary < Scout::Plugin
     response = JSON.parse(resp.body)
 
     if response["error"]
-      report(:error => 1)
+      report(:error => 1, :status_code => response["status"])
     else
-      report(:error => 0,:query_time => response["took"], :hits => response["hits"]["total"])
+      # ES doesn't return a status code when no error. we'll return 200 since it look like they use HTTP status codes.
+      report(:error => 0, :status_code => 200, :query_time => response["took"], :hits => response["hits"]["total"])
     end
-    report(:status_code => response["status"])
-
 
   rescue OpenURI::HTTPError
     error("Stats URL not found", "Please ensure the base url for elasticsearch index stats is correct. Current URL: \n\n#{base_url}")
