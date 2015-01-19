@@ -40,3 +40,15 @@ metadata:
     label: GC - ConcurrentMarkSweep
     units: ms
     precision: "0"
+  gc_young_collection_time:
+    label: GC - Young
+    units: ms
+    precision: "0"
+  gc_old_collection_time:
+    label: GC - Old
+    units: ms
+    precision: "0"
+  gc_survivor_collection_time:
+    label: GC - Survivor
+    units: ms
+    precision: "0"

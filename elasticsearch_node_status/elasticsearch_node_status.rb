@@ -62,7 +62,13 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     report(:non_heap_committed => b_to_mb(response['jvm']['mem']['non_heap_committed_in_bytes'] || 0))
     report(:threads_count => response['jvm']['threads']['count'] || 0)
 
-    gc_time(:gc_collection_time => response['jvm']['gc'])
+    # ES >= 1.0
+    gc_time(:gc_young_collection_time => response['jvm']['gc']['collectors']['young']) if response['jvm']['gc']['collectors']['young']
+    gc_time(:gc_old_collection_time => response['jvm']['gc']['collectors']['old']) if response['jvm']['gc']['collectors']['old']
+    gc_time(:gc_survivor_collection_time => response['jvm']['gc']['collectors']['survivor']) if response['jvm']['gc']['collectors']['survivor']
+
+    # ES < 1.0
+    gc_time(:gc_collection_time => response['jvm']['gc']) if response['jvm']['gc']['collection_count']
     # Additional GC metrics provided by ElasticSearch can vary:
     gc_time(:gc_parnew_collection_time => response['jvm']['gc']['collectors']['ParNew']) if response['jvm']['gc']['collectors']['ParNew']
     gc_time(:gc_cms_collection_time => response['jvm']['gc']['collectors']['ConcurrentMarkSweep']) if response['jvm']['gc']['collectors']['ConcurrentMarkSweep']
