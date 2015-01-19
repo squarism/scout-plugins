@@ -100,7 +100,7 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     bytes && bytes.to_f / 1024 / 1024
   end
 
-  # Reports the time spent in collection / # of collections for this reporting period for ES < 1.0.
+  # Reports the time spent in collection / # of collections for this reporting period.
   def gc_time(data)
     key = data.keys.first.to_s
     collection_time = data.values.first['collection_time_in_millis'] || 0
