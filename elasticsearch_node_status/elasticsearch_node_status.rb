@@ -111,9 +111,9 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
 
     if previous_collection_time and previous_collection_count
       rate = (collection_time-previous_collection_time).to_f/(collection_count-previous_collection_count)
-      if rate >=0 # assuming that restarting elasticsearch restarts counts, which means the rate could be < 0.
+      if rate >=0 && rate.finite? # assuming that restarting elasticsearch restarts counts, which means the rate could be < 0. If the count hasn't changed, the rate will be infinite, which breaks things.
         report(data.keys.first => rate)
-      elsif rate.nan? # no activity
+      elsif rate.nan? || rate.infinite? # no activity
         report(data.keys.first => 0)
       end
     end
