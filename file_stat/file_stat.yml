@@ -4,32 +4,26 @@ metadata:
     precision: "0"
     label: Status
   ctime:
-    units: "seconds"
     delimiter: ""
     precision: "0"
     label: ctime
   ctime_diff:
-    units: "seconds"
     delimiter: ""
     precision: "0"
     label: ctime diff
   mtime:
-    units: "seconds"
     delimiter: ""
     precision: "0"
     label: mtime
   mtime_diff:
-    units: "seconds"
     delimiter: ""
     precision: "0"
     label: mtime diff
   atime:
-    units: "seconds"
     delimiter: ""
     precision: "0"
     label: atime
   atime_diff:
-    units: "seconds"
     delimiter: ""
     precision: "0"
     label: atime diff
