@@ -25,18 +25,18 @@ class FileStat < Scout::Plugin
       'mtime_diff'  => -1,  # The mtime difference from now, in seconds
       'atime'       => -1,  # Last access time for this file in UTC (seconds since epoch)
       'atime_diff'  => -1,  # The atime difference from now, in seconds
-      'blksize'     => -1,  # Returns the native file system’s block size. Will return nil on platforms that don’t support this information.
-      'blocks'      => -1,  # Returns the number of native file system blocks allocated for this file, or nil if the operating system doesn’t support this feature.
+      'blksize'     => -1,  # Returns the native file system's block size. Will return nil on platforms that don't support this information.
+      'blocks'      => -1,  # Returns the number of native file system blocks allocated for this file, or nil if the operating system doesn't support this feature.
       'dev'         => -1,  # Returns an integer representing the device on which stat resides.
-      'ftype'       => -1,  # Identifies the type of stat. "unknown" -1, “file” 0 , “directory” 1, “characterSpecial” 2, “blockSpecial” 3, “fifo” 4, “link” 5, “socket” 6
+      'ftype'       => -1,  # Identifies the type of stat. "unknown" -1, "file" 0 , "directory" 1, "characterSpecial" 2, "blockSpecial" 3, "fifo" 4, "link" 5, "socket" 6
       'gid'         => -1,  # Returns the numeric group id of the owner of stat.
       'ino'         => -1,  # Returns the inode number for stat.
       'mode'        => -1,  # Returns an integer representing the permission bits of stat. The meaning of the bits is platform dependent; on Unix systems, see stat(2).
       'nlink'       => -1,  # Returns the number of hard links to stat.
-      'setgid'      => -1,  # Returns true if stat has the set-group-id permission bit set, false if it doesn’t or if the operating system doesn’t support this feature.
-      'setuid'      => -1,  # Returns true if stat has the set-user-id permission bit set, false if it doesn’t or if the operating system doesn’t support this feature.
+      'setgid'      => -1,  # Returns true if stat has the set-group-id permission bit set, false if it doesn't or if the operating system doesn't support this feature.
+      'setuid'      => -1,  # Returns true if stat has the set-user-id permission bit set, false if it doesn't or if the operating system doesn't support this feature.
       'size'        => -1,  # Returns the size of stat in bytes.
-      'sticky'      => -1,  # Returns true if stat has its sticky bit set, false if it doesn’t or if the operating system doesn’t support this feature.
+      'sticky'      => -1,  # Returns true if stat has its sticky bit set, false if it doesn't or if the operating system doesn't support this feature.
       'uid'         => -1,  # Returns the numeric user id of the owner of stat.
     }.freeze
 
