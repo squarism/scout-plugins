@@ -11,7 +11,7 @@ class FileStat < Scout::Plugin
       attributes: advanced
     alert_status_change:
       label: Alert on status change
-      notes: Generate an alert if the path does not exist, is inaccessible, or when the "status" metric changes
+      notes: Generate an alert when the "status" of the path changes
       default: "true"
       attributes: advanced
   EOS
@@ -24,7 +24,7 @@ class FileStat < Scout::Plugin
     alert_status_change = option(:alert_status_change).to_s.downcase.strip == 'true' ? true : false
 
     default_status = {
-      'status'      => -1,  # The file/direcoty/socket/fifo/etc status, -2 EACCES, -1 ENOENT, 1 OK
+      'status'      => -1,  # The file/direcoty/socket/fifo/etc status, -3 EACCES, -2 ENOENT, -1 UNKNOWN, 1 OK
       'ctime'       => -1,  # Change time for stat in UTC (the time directory information about the path was changed, not the path itself)
       'ctime_diff'  => -1,  # The ctime difference from now, in seconds
       'mtime'       => -1,  # Modification time in UTC (seconds since epoch)
@@ -46,8 +46,9 @@ class FileStat < Scout::Plugin
       'uid'         => -1,  # Returns the numeric user id of the owner of stat.
     }.freeze
 
-    status_codes = {'Errno::EACCES'    => -2,
-                    'Errno::ENOENT'    => -1,
+    status_codes = {'Errno::EACCES'    => -3,
+                    'Errno::ENOENT'    => -2,
+                    'UNKNOWN'          => -1,
                     'OK'               =>  1 }
     status_codes.default = -1
 
@@ -78,15 +79,19 @@ class FileStat < Scout::Plugin
     # Always report status
     stats_list << 'status'
 
-    if stats_list.empty?
-      # Cannot proceed
-      return error('No valid stats in stats_list!')
-    elsif invalid_stat_names.any?
+    # Should never happen since we always report status - cannot proceed
+    return error('No valid stats in stats_list!') if stats_list.empty?
+
+    if invalid_stat_names.any?
+      previous_invalid_stat_names = memory(:invalid_stat_names)
       # Proceed, but report invalid stat_names detected
-      error(:subject => 'Invalid stat name(s) detected', :body => "Invalid stat name(s) detected: '#{invalid_stat_names.join(',')}'")
+      if invalid_stat_names != previous_invalid_stat_names
+        error(:subject => 'Invalid stat name(s) detected', :body => "Invalid stat name(s) detected: '#{invalid_stat_names.join(',')}'")
+        remember(:invalid_stat_names)
+      end
     end
 
-    previous_status = memory(:file_status)
+    previous_status = memory(:file_status) || default_status.dup
 
     # Initialize everything to defaults
     file_status = default_status.dup
@@ -101,7 +106,7 @@ class FileStat < Scout::Plugin
       fstat = File.stat(path)
     rescue Errno::EACCES, Errno::ENOENT => e
       file_status['status'] = status_codes[e.class.to_s]
-      if alert_status_change
+      if alert_status_change and file_status['status'] != previous_status['status']
         alert("Cannot stat path: #{e.message}")
       end
       remember :file_status => file_status
@@ -109,7 +114,7 @@ class FileStat < Scout::Plugin
     end
 
     file_status['status'] = status_codes['OK']
-    if !previous_status.nil? and file_status['status'] != previous_status['status']
+    if file_status['status'] != previous_status['status']
       alert(:subject => "Status changed for #{path}", :body => "Current Status: #{file_status['status']} - Previous Status: #{previous_status['status']}") if alert_status_change
     end
     
