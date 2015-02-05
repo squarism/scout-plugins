@@ -7,7 +7,7 @@ class FileStat < Scout::Plugin
     stats_list:
       label: Stats to report
       default: status,ftype,size,mode,uid,gid
-      notes: 'A comma separated list of stats to report. Available stats: status,ctime,ctime_diff,mtime,mtime_diff,atime,atime_diff,blksize,blocks,dev,ftype,gid,ino,mode,nlink,setgid,setuid,size,sticky,uid or "all" for all stats'
+      notes: 'A comma separated list of stats to report. Available stats: status, ctime, ctime_diff, mtime, mtime_diff, atime, atime_diff, blksize, blocks, dev, ftype, gid, ino, mode, nlink, setgid, setuid, size, sticky, uid or "all" for all stats'
       attributes: advanced
     alert_status_change:
       label: Alert on status change
