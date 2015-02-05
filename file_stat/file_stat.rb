@@ -34,7 +34,7 @@ class FileStat < Scout::Plugin
       'blksize'     => -1,  # Returns the native path system's block size. Will return nil on platforms that don't support this information.
       'blocks'      => -1,  # Returns the number of native path system blocks allocated for this path, or nil if the operating system doesn't support this feature.
       'dev'         => -1,  # Returns an integer representing the device on which stat resides.
-      'ftype'       => -1,  # Identifies the type of stat. "unknown" -1, "file" 0 , "directory" 1, "characterSpecial" 2, "blockSpecial" 3, "fifo" 4, "link" 5, "socket" 6
+      'ftype'       => -1,  # Identifies the type of stat. "unknown" -1, "file" 1 , "directory" 2, "characterSpecial" 3, "blockSpecial" 4, "fifo" 5, "link" 6, "socket" 7
       'gid'         => -1,  # Returns the numeric group id of the owner of stat.
       'ino'         => -1,  # Returns the inode number for stat.
       'mode'        => -1,  # Returns an integer representing the permission bits of stat. The meaning of the bits is platform dependent; on Unix systems, see stat(2).
@@ -52,13 +52,13 @@ class FileStat < Scout::Plugin
     status_codes.default = -1
 
     ftype_codes = {'unknown'          => -1,
-                   'file'             =>  0,
-                   'directory'        =>  1,
-                   'characterSpecial' =>  2,
-                   'blockSpecial'     =>  3,
-                   'fifo'             =>  4,
-                   'link'             =>  5,
-                   'socket'           =>  6 }
+                   'file'             =>  1,
+                   'directory'        =>  2,
+                   'characterSpecial' =>  3,
+                   'blockSpecial'     =>  4,
+                   'fifo'             =>  5,
+                   'link'             =>  6,
+                   'socket'           =>  7 }
     ftype_codes.default = -1
 
     stats_list = []
