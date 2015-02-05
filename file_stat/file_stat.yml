@@ -2,7 +2,7 @@ metadata:
   status:
     delimiter: ""
     precision: "0"
-    label: Status
+    label: status
   ctime:
     delimiter: ""
     precision: "0"
