@@ -4,7 +4,7 @@ metadata:
     precision: 0
   cpu_percent:          
     label: CPU %
-    units: %
+    units: "%"
     precision: 2
   memory_usage:
     label: Memory Usage
