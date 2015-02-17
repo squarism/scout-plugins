@@ -8,18 +8,18 @@ metadata:
     precision: 2
   memory_usage:
     label: Memory Usage
-    units: Mb
+    units: MB
     precision: 2
   memory_limit:
     label: Memory Limit
-    units: Mb
+    units: MB
     precision: 2
   network_in:
     label: Network In
-    units: Kb/s
+    units: KB/s
     precision: 2
   network_out:
     label: Network Out
-    units: Kb/s
+    units: KB/s
     precision: 2
 
