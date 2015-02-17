@@ -1,0 +1,25 @@
+metadata:
+  number_of_containers:
+    label: Number of Containers
+    precision: 0
+  cpu_percent:          
+    label: CPU %
+    units: %
+    precision: 2
+  memory_usage:
+    label: Memory Usage
+    units: Mb
+    precision: 2
+  memory_limit:
+    label: Memory Limit
+    units: Mb
+    precision: 2
+  network_in:
+    label: Network In
+    units: Kb/s
+    precision: 2
+  network_out:
+    label: Network Out
+    units: Kb/s
+    precision: 2
+
