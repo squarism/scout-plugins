@@ -36,7 +36,9 @@ class DockerMonitor < Scout::Plugin
   end
 
   def add_container_stats(container_id)
-    connection.request(:method => :get, :path => "/containers/#{container_id}/stats", :response_block => streamer(container_id))
+    connection.request(:method => :get, :path => "/containers/#{container_id}/stats", :read_timeout => 10, :response_block => streamer(container_id))
+  rescue Excon::Errors::Timeout # will timeout if the container does not exist
+    # noop - simply ignore this container
   rescue Excon::Errors::SocketError => e # using exceptions for control flow. what a terrible idea.
     raise unless e.message.include?('stats gathered')
   end
