@@ -72,17 +72,17 @@ class MonitorDelayedJobs < Scout::Plugin
       # All jobs
       query_hash[:total]     = DelayedJob
       # Jobs that are currently being run by workers
-      query_hash[:running]   = DelayedJob.find(:conditions => 'locked_at IS NOT NULL AND failed_at IS NULL')
+      query_hash[:running]   = DelayedJob.find(:all, :conditions => 'locked_at IS NOT NULL AND failed_at IS NULL')
       # Jobs that are ready to run but haven't ever been run
-      query_hash[:waiting]   = DelayedJob.find(:conditions => ['run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc])
+      query_hash[:waiting]   = DelayedJob.find(:all, :conditions => ['run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc])
       # Jobs that haven't ever been run but are not set to run until later
-      query_hash[:scheduled] = DelayedJob.find(:conditions => ['run_at > ? AND locked_at IS NULL AND attempts = 0', Time.now.utc])
+      query_hash[:scheduled] = DelayedJob.find(:all, :conditions => ['run_at > ? AND locked_at IS NULL AND attempts = 0', Time.now.utc])
       # Jobs that aren't running that have failed at least once
-      query_hash[:failing]   = DelayedJob.find(:conditions => 'attempts > 0 AND failed_at IS NULL AND locked_at IS NULL')
+      query_hash[:failing]   = DelayedJob.find(:all, :conditions => 'attempts > 0 AND failed_at IS NULL AND locked_at IS NULL')
       # Jobs that have permanently failed
-      query_hash[:failed]    = DelayedJob.find(:conditions => 'failed_at IS NOT NULL')
+      query_hash[:failed]    = DelayedJob.find(:all, :conditions => 'failed_at IS NOT NULL')
       # The oldest job that hasn't yet been run, in minutes
-      query_hash[:oldest]    = DelayedJob.find(:conditions => [ 'run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc ], :order => :run_at)
+      query_hash[:oldest]    = DelayedJob.find(:all, :conditions => [ 'run_at <= ? AND locked_at IS NULL AND attempts = 0', Time.now.utc ], :order => :run_at)
     end
 
     report_hash = Hash.new
