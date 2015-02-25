@@ -40,7 +40,9 @@ class DockerMonitor < Scout::Plugin
   rescue Excon::Errors::Timeout # will timeout if the container does not exist
     # noop - simply ignore this container
   rescue Excon::Errors::SocketError => e # using exceptions for control flow. what a terrible idea.
-    raise unless e.message.include?('stats gathered')
+    unless e.message.include?('stats gathered')
+      error("Invalid Stats API endpoint", "There was an error reading from the stats API. Are you running Docker version 1.5 or higher, and is /var/run/docker.sock readable by the user running scout?")
+    end
   end
 
   def connection
