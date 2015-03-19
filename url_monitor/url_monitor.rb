@@ -23,7 +23,16 @@ class UrlMonitor < Scout::Plugin
   request_method:
     default: 'HEAD'
     name: Request Method
-    notes: "The method of the request sent to the url. Options are 'GET' or 'HEAD'. Defaults to 'HEAD'."
+    notes: "The method of the request sent to the url. Options are 'GET', 'HEAD' or 'POST'. Defaults to 'HEAD'."
+    attributes: advanced
+  request_body_type:
+    default: 'application/x-www-form-urlencoded'
+    name: Request Body Type
+    notes: "The Type that is used while sending a POST. Defaults to application/x-www-form-urlencoded."
+    attributes: advanced
+  request_body_content:
+    name: Request Body Content
+    notes: "The Body that is send along in the Request, for example during a POST"
     attributes: advanced
   EOS
 
@@ -101,8 +110,18 @@ class UrlMonitor < Scout::Plugin
             path_and_query = (uri.path != '' ? uri.path : '/') + (uri.query ? ('?' + uri.query) : '')
             if(option('request_method').to_s.upcase.strip == 'GET')
               req = Net::HTTP::Get.new(path_and_query)
+            elsif(option('request_method').to_s.upcase.strip == 'POST')
+              if(option('request_body_type'))
+                  request_body_type = option('request_body_type')
+              else
+                  request_body_type = 'application/x-www-form-urlencoded'
+              end
+              req = Net::HTTP::Post.new(path_and_query, {'Content-Type' => request_body_type})
             else
               req = Net::HTTP::Head.new(path_and_query)
+            end
+            if(req.request_body_permitted? and option('request_body_content'))
+                req.body = option('request_body_content')
             end
             req['User-Agent'] = "ScoutURLMonitor/#{Scout::VERSION}"
             req['host'] = uri.host
