@@ -75,4 +75,13 @@ class UrlMonitorTest < Test::Unit::TestCase
     res = @plugin.run()
     assert_equal "GET", FakeWeb.last_request.method
   end
+
+  def test_sends_post_request
+    uri = "http://scoutapp.com"
+    request_body_content = "{ 'foo':'bar' }"
+    FakeWeb.register_uri(:post, uri, :body => "the page", :parameters => {:foo => 'bar'}, :status => ["200" => "OK"])
+    @plugin = UrlMonitor.new(nil, {}, {:url => uri, :request_method => 'POST', :request_body_content => request_body_content})
+    res = @plugin.run()
+    assert_equal "POST", FakeWeb.last_request.method
+  end
 end
