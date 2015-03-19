@@ -29,6 +29,7 @@ class UrlMonitor < Scout::Plugin
     default: 'application/x-www-form-urlencoded'
     name: Request Body Type
     notes: "The Type that is used while sending a POST. Defaults to application/x-www-form-urlencoded."
+    attributes: advanced
   request_body_content:
     name: Request Body Content
     notes: "The Body that is send along in the Request, for example during a POST"
