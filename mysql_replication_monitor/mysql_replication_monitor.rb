@@ -1,7 +1,8 @@
 require 'time'
 require 'date'
+
 class MysqlReplicationMonitor < Scout::Plugin
-  needs 'mysql'
+  needs 'mysql2'
 
   OPTIONS=<<-EOS
   host:
@@ -32,6 +33,10 @@ class MysqlReplicationMonitor < Scout::Plugin
     name: Ignore Window End
     notes: Time to resume notifications on replication failure. For Example,  2:00am
     default:
+  default_file:
+    name: Mysql Default File
+    notes: Path to the MySQL default file. For Example, /home/scout/.my.cnf
+    default: /var/lib/scoutd/.my.cnf
   EOS
 
   attr_accessor :connection
@@ -39,12 +44,23 @@ class MysqlReplicationMonitor < Scout::Plugin
   def build_report
     res={"Seconds Behind Master" => -1, "Replication Running"=>0}
     begin
-      self.connection=Mysql.new(option(:host),option(:username),option(:password),nil,(option(:port).nil? ? nil : option(:port).to_i),option(:socket))
-      h=connection.query("show slave status").fetch_hash
+      self.connection=Mysql2::Client.new(
+        :host => option(:host),
+        :username => option(:username),
+        :password => option(:password),
+        :port => (option(:port).nil? ? nil : option(:port).to_i),
+        :socket => option(:socket),
+        :default_file => option(:default_file)
+        )
+
+      y = connection.query("show slave status")
+
       down_at = memory(:down_at)
-      if h.nil?
+
+      if y.count == 0
         error("Replication not configured")
       else
+        h = y.each {|r| r}[0]
         if h["Seconds_Behind_Master"].nil? && !down_at
           if in_ignore_window?
             res["Replication Running"]=1
@@ -53,6 +69,7 @@ class MysqlReplicationMonitor < Scout::Plugin
             down_at = Time.now
           end
         elsif h["Slave_IO_Running"] == "Yes" && h["Slave_SQL_Running"] == "Yes"
+
           res["Seconds Behind Master"] = h["Seconds_Behind_Master"]
           res["Replication Running"]=1
           down_at = nil if down_at
@@ -66,7 +83,7 @@ class MysqlReplicationMonitor < Scout::Plugin
         end
       end
       remember(:down_at,down_at)
-    rescue Mysql::Error=>e
+    rescue Mysql2::Error=>e
       error("Unable to connect to MySQL",e.to_s)
     end
     report(res)
@@ -86,5 +103,4 @@ class MysqlReplicationMonitor < Scout::Plugin
       false
     end
   end
-
 end

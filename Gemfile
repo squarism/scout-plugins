@@ -12,7 +12,7 @@ end
 
 # plugin-specific
 gem 'pg'
-gem 'mysql'
+gem 'mysql2'
 gem 'mongo'
 gem 'request-log-analyzer'
 gem 'beanstalk-client'
