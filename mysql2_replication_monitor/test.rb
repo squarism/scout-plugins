@@ -1,7 +1,7 @@
 require File.expand_path('../../test_helper.rb', __FILE__)
 require File.expand_path('../mysql_replication_monitor.rb', __FILE__)
 
-require 'mysql'
+require 'mysql2'
 
 class MysqlReplicationMonitorTest < Test::Unit::TestCase
 
@@ -14,9 +14,11 @@ class MysqlReplicationMonitorTest < Test::Unit::TestCase
     # @plugin=PluginName.new(last_run, memory, options)
     #                        date      hash    hash
     @plugin = MysqlReplicationMonitor.new(nil, {}, @options)
-    ms_res = Mysql::Result.new
-    ms_res.stubs(:fetch_hash).returns(FIXTURES[:success])
-    Mysql.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
+    ms_res = Mysql2::Result.new
+    ms_res.stubs(:all).returns([FIXTURES[:success]])
+    puts ms_res.each {|r| puts r}
+    puts FIXTURES[:success]
+    Mysql2::Client.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
     res = @plugin.run()
 
     # assertions
@@ -25,9 +27,9 @@ class MysqlReplicationMonitorTest < Test::Unit::TestCase
 
   def test_replication_not_configured
     @plugin = MysqlReplicationMonitor.new(nil, {}, @options)
-    ms_res = Mysql::Result.new
-    ms_res.stubs(:fetch_hash).returns(nil)
-    Mysql.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
+    ms_res = Mysql2::Result.new
+    ms_res.stubs(:query).returns(nil)
+    Mysql2::Client.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
     res= @plugin.run()
 
     # assertions
@@ -36,9 +38,9 @@ class MysqlReplicationMonitorTest < Test::Unit::TestCase
 
   def test_replication_failure
     @plugin = MysqlReplicationMonitor.new(nil, {}, @options)
-    ms_res = Mysql::Result.new
-    ms_res.stubs(:fetch_hash).returns(FIXTURES[:failure])
-    Mysql.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
+    ms_res = Mysql2::Result.new
+    ms_res.stubs(:query).returns(FIXTURES[:failure])
+    Mysql2::Client.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
     res = @plugin.run()
 
     # assertions
@@ -48,9 +50,9 @@ class MysqlReplicationMonitorTest < Test::Unit::TestCase
 
   def test_replication_failure_nil_seconds_behind
     @plugin = MysqlReplicationMonitor.new(nil, {}, @options)
-    ms_res = Mysql::Result.new
-    ms_res.stubs(:fetch_hash).returns(FIXTURES[:failure_nil_seconds_behind])
-    Mysql.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
+    ms_res = Mysql2::Result.new
+    ms_res.stubs(:query).returns(FIXTURES[:failure_nil_seconds_behind])
+    Mysql2::Client.any_instance.stubs(:query).with("show slave status").returns(ms_res).once
     res = @plugin.run()
 
     # assertions
