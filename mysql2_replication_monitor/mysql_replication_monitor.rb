@@ -35,8 +35,8 @@ class MysqlReplicationMonitor < Scout::Plugin
     default:
   default_file:
     name: Mysql Default File
-    notes: Path to the MySQL default file. For Example, /home/scout/.my.cnf
-    default: /var/lib/scoutd/.my.cnf
+    notes: Optional path to the MySQL default file. For Example, /home/scout/.my.cnf
+    default:
   EOS
 
   attr_accessor :connection
@@ -50,7 +50,7 @@ class MysqlReplicationMonitor < Scout::Plugin
         :password => option(:password),
         :port => (option(:port).nil? ? nil : option(:port).to_i),
         :socket => option(:socket),
-        :default_file => option(:default_file)
+        :default_file => option(:default_file) unless option(:default_file).nil? || option(:default_file).empty?
         )
 
       y = connection.query("show slave status")
