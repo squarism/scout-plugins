@@ -50,7 +50,7 @@ class MysqlReplicationMonitor < Scout::Plugin
         :password => option(:password),
         :port => (option(:port).nil? ? nil : option(:port).to_i),
         :socket => option(:socket),
-        :default_file => option(:default_file) unless option(:default_file).nil? || option(:default_file).empty?
+        :default_file => (option(:default_file) unless option(:default_file).nil? || option(:default_file).empty?)
         )
 
       y = connection.query("show slave status")
