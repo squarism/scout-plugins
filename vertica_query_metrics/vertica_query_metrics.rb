@@ -30,10 +30,9 @@ class VerticaQueryMetrics < Scout::Plugin
     # node_name|active_user_session_count|active_system_session_count|total_user_session_count|total_system_session_count|total_active_session_count|total_session_count|running_query_count|executed_query_count
     # v_docker_node0001|1|2|21|1048|3|1069|1|8
     # {"node_name"=>"v_docker_node0001", "active_user_session_count"=>"1", "active_system_session_count"=>"2", "total_user_session_count"=>"49", "total_system_session_count"=>"3460", "total_active_session_count"=>"3", "total_session_count"=>"3509", "running_query_count"=>"1", "executed_query_count"=>"22"}
-		result = `#{@vertica_command} -c "#{query}" -A #{option(:database)} #{option(:user)} 2>&1`
+		result = `#{@vertica_command} -c "#{query}" -A #{option(:database)} -U #{option(:user)} #{option(:password).nil? ? '' : "-w #{password}"} 2>&1`
     if $?.success?
       output = {}
-      puts result
       keys, values = result.split(/\n/)
       keys = keys.split('|')
       values = values.split('|')
