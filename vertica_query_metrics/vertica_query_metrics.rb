@@ -17,9 +17,9 @@ class VerticaQueryMetrics < Scout::Plugin
 
 	def build_report
 		@vertica_command   = option(:vertica_command) || '/opt/vertica/bin/vsql'
-    res = vertica_query("SELECT node_name, node_state, node_address FROM nodes WHERE node_address = '127.0.0.1';")
-    res = vertica_query("SELECT * from query_metrics where node_name = '#{res['node_name']}';")
+    res = vertica_query("SELECT * from query_metrics join nodes on nodes.node_name = query_metrics.node_name where node_address = '127.0.0.1';")
     report(res.select { |k| %w(active_user_session_count active_system_session_count running_query_count).include?(k) })
+    report(:up => (res['node_state'] == 'UP' ? 1 : 0))
     counter(:queries, res['executed_query_count'].to_i, :per => :second)
   end
 
