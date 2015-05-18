@@ -1,6 +1,4 @@
 class VerticaQueryMetrics < Scout::Plugin
-  require 'socket'
-
   OPTIONS=<<-EOS
   user:
     name: Vertica username
@@ -19,23 +17,12 @@ class VerticaQueryMetrics < Scout::Plugin
 
 	def build_report
 		@vertica_command   = option(:vertica_command) || '/opt/vertica/bin/vsql'
-    res = vertica_query("SELECT * from query_metrics join nodes on nodes.node_name = query_metrics.node_name where node_address = '#{local_ip}';")
+    res = vertica_query("SELECT * from query_metrics join current_session on current_session.node_name = query_metrics.node_name;")
     report(res.select { |k| %w(active_user_session_count active_system_session_count running_query_count).include?(k) })
-    report(:up => (res['node_state'] == 'UP' ? 1 : 0)) if res['node_state']
     counter(:queries, res['executed_query_count'].to_i, :per => :second) if res['executed_query_count'] 
   end
 
 	private
-
-  def local_ip
-    orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true
-    UDPSocket.open do |s|
-      s.connect 'localhost', 1
-      s.addr.last
-    end
-  ensure
-    Socket.do_not_reverse_lookup = orig
-  end
 
 	def vertica_query(query)
 		# SELECT * from query_metrics;' -A  docker dbadmin
