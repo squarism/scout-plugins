@@ -68,25 +68,26 @@ class ElasticsearchIndexStatus < Scout::Plugin
   def search_metrics(indices, primaries_key, type)
     index_name = option(:index_name)
     stats = indices[index_name]['primaries'][primaries_key]
+    if stats
+      # sample for index/delete
+      # {"open_contexts"=>0, "query_total"=>319796, "query_time_in_millis"=>22074525, "query_current"=>0, "fetch_total"=>12014, "fetch_time_in_millis"=>698430, "fetch_current"=>0}
 
-    # sample for index/delete
-    # {"open_contexts"=>0, "query_total"=>319796, "query_time_in_millis"=>22074525, "query_current"=>0, "fetch_total"=>12014, "fetch_time_in_millis"=>698430, "fetch_current"=>0}
+      # sample for query
+      # {"open_contexts"=>0, "query_total"=>319796, "query_time_in_millis"=>22074525, "query_current"=>0, "fetch_total"=>12014, "fetch_time_in_millis"=>698430, "fetch_current"=>0}
 
-    # sample for query
-    # {"open_contexts"=>0, "query_total"=>319796, "query_time_in_millis"=>22074525, "query_current"=>0, "fetch_total"=>12014, "fetch_time_in_millis"=>698430, "fetch_current"=>0}
+      before = memory("_counter_#{type}_rate")
+      total  = stats["#{type}_total"]
+      time   = stats["#{type}_time_in_millis"]
 
-    before = memory("_counter_#{type}_rate")
-    total  = stats["#{type}_total"]
-    time   = stats["#{type}_time_in_millis"]
+      counter("#{type}_rate".to_sym, total, :per => :second)
+      last_time = memory("last_#{type}_time")
 
-    counter("#{type}_rate", total, :per => :second)
-    last_time = memory("last_#{type}_time")
-
-    if before and !last_time.nil?
-      avg_time = (time - last_time)/(total-before[:value]).to_f
-      report("#{type}_time"=>avg_time) if avg_time >= 0 # handle a reset
+      if before and !last_time.nil?
+        avg_time = (time - last_time)/(total-before[:value]).to_f
+        report("#{type}_time".to_sym =>avg_time) if avg_time >= 0 # handle a reset
+      end
+      remember("last_#{type}_time",time)
     end
-    remember("last_#{type}_time",time)
   end
 
 
