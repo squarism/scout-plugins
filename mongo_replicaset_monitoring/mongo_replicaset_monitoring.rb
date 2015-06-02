@@ -52,21 +52,35 @@ class MongoReplicaSetMonitoring < Scout::Plugin
     @connect_timeout = option_to_f('connect_timeout')
     @op_timeout      = option_to_f('op_timeout')
 
-    begin
-      connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true,:connect_timeout=>@connect_timeout,:op_timeout=>@op_timeout)
-    rescue Mongo::ConnectionFailure
-      return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}, also confirm if SSL should be enabled or disabled.")
+    if(Mongo::constants.include?(:VERSION) && Mongo::VERSION.split(':').first.to_i >= 2)
+      get_replica_set_status_v2
+    else
+      get_replica_set_status_v1
     end
+  end
+  
+  def get_replica_set_status_v1
+    connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true,:connect_timeout=>@connect_timeout,:op_timeout=>@op_timeout)
     
     # Connect to the database
     @admin_db = connection.db('admin')
     @admin_db.authenticate(@username,@password) unless @username.nil?
-    get_replica_set_status
-  end
-  
-  def get_replica_set_status
     replset_status = @admin_db.command({'replSetGetStatus' => 1}, :check_response => false)
-    
+    report_replica_set_status(replset_status)
+  rescue Mongo::ConnectionFailure
+    return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}, also confirm if SSL should be enabled or disabled.")
+  end
+
+  def get_replica_set_status_v2
+    client = Mongo::Client.new(["#{@host}:#{@port}"], :database => 'admin')
+    client = client.with(user: @username, password: @password) unless @username.nil?
+    replset_status = client.database.command(:replSetGetStatus => 1).first
+    report_replica_set_status(replset_status)
+  rescue Mongo::Error::NoServerAvailable
+    return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}, also confirm if SSL should be enabled or disabled.")
+  end
+
+  def report_replica_set_status(replset_status)
     unless replset_status['ok'] == 1
       return error("Node isn't a member of a Replica Set","Unable to fetch Replica Set status information. Error Message:\n\n#{replset_status['errmsg']}")
     end
