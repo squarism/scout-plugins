@@ -50,6 +50,14 @@ class MongoServerStatus < Scout::Plugin
     @connect_timeout = option_to_f('connect_timeout')
     @op_timeout      = option_to_f('op_timeout')
     
+    if(Mongo::constants.include?(:VERSION) && Mongo::VERSION.split(':').first.to_i >= 2)
+      get_server_status_v2
+    else
+      get_server_status_v1
+    end
+  end
+
+  def get_server_status_v1
     begin
       connection = Mongo::Connection.new(@host,@port,:ssl=>@ssl,:slave_ok=>true,:connect_timeout=>@connect_timeout,:op_timeout=>@op_timeout)
     rescue Mongo::ConnectionFailure
@@ -64,12 +72,20 @@ class MongoServerStatus < Scout::Plugin
       return error("Unable to authenticate to MongoDB Database.",$!.message)
     end
     
-    get_server_status
+    stats = @admin_db.command('serverStatus' => 1)
+    get_server_status(stats)
+  end
+
+  def get_server_status_v2
+    client = Mongo::Client.new(["#{@host}:#{@port}"], :database => 'admin')
+    client = client.with(user: @username, password: @password) unless @username.nil?
+    stats = client.database.command(:serverStatus => 1).first
+    get_server_status(stats)
+  rescue Mongo::Error::NoServerAvailable
+    return error("Unable to connect to the MongoDB Daemon.","Please ensure it is running on #{@host}:#{@port}\n\nException Message: #{$!.message}, also confirm if SSL should be enabled or disabled.")
   end
   
-  def get_server_status
-    stats = @admin_db.command('serverStatus' => 1)
-    
+  def get_server_status(stats)
     if stats['indexCounters'] and stats['indexCounters']['btree']
       counter(:btree_accesses, stats['indexCounters']['btree']['accesses'], :per => :second)
     
