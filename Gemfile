@@ -22,3 +22,4 @@ gem 'resque'
 gem 'nokogiri'
 gem 'memcache-client'
 gem 'sidekiq'
+gem 'aws-sdk', "~> 2.1.2"

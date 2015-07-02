@@ -5,6 +5,10 @@
 class AwsDatapipelineStatus < Scout::Plugin
   needs 'aws-sdk'
 
+  HEALTHY = 0
+  ERROR   = 1
+  UNKNOWN = 2
+
   OPTIONS=<<-EOS
     awskey:
       name: AWS Access Key
@@ -62,11 +66,11 @@ class AwsDatapipelineStatus < Scout::Plugin
 
       pipeline_status[pipeline_name] = case health_status.string_value
       when "HEALTHY"
-        0
+        HEALTHY
       when "ERROR"
-        1
+        ERROR
       else
-        2
+        UNKNOWN
       end
 
     end
