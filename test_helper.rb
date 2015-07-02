@@ -1,4 +1,4 @@
-require 'test/unit'
+require 'minitest'
 require 'rubygems'
 require 'mocha/test_unit'     # gem install mocha
 require 'fakeweb'   # gem install fakeweb
@@ -10,7 +10,7 @@ rescue LoadError
   # not using pry
 end
 
-class Test::Unit::TestCase
+class MiniTest::Test
   # Reads the code and extracts default options. The argument should be the name of
   #  both the plugin directory and the file. This assumes the directory and filename are the same.
   def parse_defaults(name)
